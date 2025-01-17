@@ -37,6 +37,14 @@ const PRESET_COLORS = ['#E76E50', '#E76E50', '#E76E50', '#E76E50', '#E76E50'];
 
 const PERFORMANCE_GAME_COUNTS = [5, 10, 15, 20, 25, 30, 40, 50];
 
+const TIME_RANGES = [
+  { label: 'All-time', value: 'all' },
+  { label: '2y', value: '2y' },
+  { label: '1y', value: '1y' },
+  { label: '6m', value: '6m' },
+  { label: '3m', value: '3m' },
+];
+
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 interface Game {
@@ -65,6 +73,7 @@ export default function ChessResultsTable() {
   const [colorIndices, setColorIndices] = useState<{[key: string]: number}>({})
   const [performanceGameCount, setPerformanceGameCount] = useState(10)
   const [stableFilteredGames, setStableFilteredGames] = useState<Game[]>([])
+  const [timeRange, setTimeRange] = useState('all')
   
   const renderCount = useRef(0)
 
@@ -105,41 +114,59 @@ export default function ChessResultsTable() {
     }
   }, [gameType, colorIndices]);
 
-  useMemo(() => {
-    renderCount.current += 1;
-    console.log(`Recalculating filteredGames. Render count: ${renderCount.current}`);
-    
-    if (!data?.games) return []
-    
-    const games = data.games
-      .filter(game => 
-        game.player_rating && 
-        game.opponent_name && 
-        (game.score === 0 || game.score === 1 || game.score === 5)
-      )
-      .map((game, index) => ({
-        ...game,
-        id: `game-${index}-${renderCount.current}`
-      }));
-    
-    const sortedGames = sortGames(games);
-    
-    console.log('Sorted games:', sortedGames.map(g => ({ id: g.id, date: g.game_date, opponent: g.opponent_name })));
-    
-    setStableFilteredGames(sortedGames);
-    return sortedGames;
+  useEffect(() => {
+    if (data?.games) {
+      const games = data.games
+        .filter(game => 
+          game.player_rating && 
+          game.opponent_name && 
+          (game.score === 0 || game.score === 1 || game.score === 5)
+        )
+        .map((game, index) => ({
+          ...game,
+          id: `game-${index}-${renderCount.current}`
+        }));
+      
+      const sortedGames = sortGames(games);
+      
+      console.log('Sorted games:', sortedGames.map(g => ({ id: g.id, date: g.game_date, opponent: g.opponent_name })));
+      
+      setStableFilteredGames(sortedGames);
+    }
   }, [data]);
 
-  const totalPages = useMemo(() => Math.ceil(stableFilteredGames.length / GAMES_PER_PAGE), [stableFilteredGames]);
+  const timeFilteredGames = useMemo(() => {
+    const now = new Date();
+    const filterDate = new Date();
+    switch (timeRange) {
+      case '2y':
+        filterDate.setFullYear(now.getFullYear() - 2);
+        break;
+      case '1y':
+        filterDate.setFullYear(now.getFullYear() - 1);
+        break;
+      case '6m':
+        filterDate.setMonth(now.getMonth() - 6);
+        break;
+      case '3m':
+        filterDate.setMonth(now.getMonth() - 3);
+        break;
+      default:
+        return sortGames(stableFilteredGames);
+    }
+    return sortGames(stableFilteredGames.filter(game => new Date(game.game_date) >= filterDate));
+  }, [stableFilteredGames, timeRange]);
+
+  const totalPages = useMemo(() => Math.ceil(timeFilteredGames.length / GAMES_PER_PAGE), [timeFilteredGames]);
 
   const paginatedGames = useMemo(() => {
-    const sortedGames = sortGames(stableFilteredGames);
     const startIndex = (currentPage - 1) * GAMES_PER_PAGE;
     const endIndex = startIndex + GAMES_PER_PAGE;
+    const sortedGames = sortGames(timeFilteredGames);
     const games = sortedGames.slice(startIndex, endIndex);
     console.log(`Paginated games for page ${currentPage}:`, games.map(g => ({ id: g.id, date: g.game_date, opponent: g.opponent_name })));
     return games;
-  }, [stableFilteredGames, currentPage]);
+  }, [timeFilteredGames, currentPage]);
 
   const performanceRating = useMemo(() => {
     if (stableFilteredGames.length > 0) {
@@ -177,6 +204,11 @@ export default function ChessResultsTable() {
     setStableFilteredGames(prevGames => [...prevGames]); // Trigger a re-render
   }, []);
 
+  const handleTimeRangeChange = useCallback((value: string) => {
+    setTimeRange(value);
+    setCurrentPage(1);
+  }, []);
+
   if (error) return <div className="text-red-500">Failed to load: {error.message}</div>
   if (isLoading) return <div className="text-blue-500">Loading...</div>
 
@@ -196,7 +228,7 @@ export default function ChessResultsTable() {
               onChange={handlePlayerCodeChange}
               className="border p-1 rounded"
             />
-            {performanceRating !== null && (
+            {stableFilteredGames.length > 0 && (
               <div className="mt-2 flex items-center space-x-1 mr-2">
                 <p className="text-sm mr-2">
                   Performance Rating:
@@ -229,16 +261,34 @@ export default function ChessResultsTable() {
         </TabsList>
         {GAME_TYPES.map((type) => (
           <TabsContent key={type} value={type}>
-            {stableFilteredGames.length > 0 ? (
-              <>
-                <div className="w-full mb-8">
-                  <PlayerRatingChart 
-                    games={stableFilteredGames} 
-                    gameType={type} 
-                    colorIndex={colorIndices[type] || 0} 
-                  />
+            <div className="w-full mb-8">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold">Rating Chart</h3>
+                <Tabs value={timeRange} onValueChange={handleTimeRangeChange}>
+                  <TabsList>
+                    {TIME_RANGES.map((range) => (
+                      <TabsTrigger key={range.value} value={range.value}>
+                        {range.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </Tabs>
+              </div>
+              {timeFilteredGames.length > 0 ? (
+                <PlayerRatingChart 
+                  games={timeFilteredGames} 
+                  gameType={type} 
+                  colorIndex={colorIndices[type] || 0} 
+                />
+              ) : (
+                <div className="text-gray-500 h-[400px] flex items-center justify-center">
+                  No games found for the selected time range.
                 </div>
-                <CommonOpponentsTable games={stableFilteredGames} gameType={type} />
+              )}
+            </div>
+            {timeFilteredGames.length > 0 ? (
+              <>
+                <CommonOpponentsTable games={timeFilteredGames} gameType={type} />
                 <div className="overflow-x-auto mt-8">
                   <table className="min-w-full bg-white border border-gray-300">
                     <thead>
@@ -292,7 +342,7 @@ export default function ChessResultsTable() {
                 </div>
               </>
             ) : (
-              <div className="text-gray-500">No valid games found for this player code and game type.</div>
+              <div className="text-gray-500">-</div>
             )}
           </TabsContent>
         ))}
