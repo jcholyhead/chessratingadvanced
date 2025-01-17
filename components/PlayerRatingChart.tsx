@@ -31,7 +31,7 @@ export default function PlayerRatingChart({ games }: PlayerRatingChartProps) {
     <Card className="w-full">
       <CardHeader>
         <CardTitle>Player Rating Over Time</CardTitle>
-        <CardDescription>Chart showing how the player\'s rating changes after each game</CardDescription>
+        <CardDescription>Chart showing how the player&apos;s rating changes after each game</CardDescription>
       </CardHeader>
       <CardContent className="w-full">
         <ChartContainer
