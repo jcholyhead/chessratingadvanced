@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
   title: 'Chess Rating Analytics',
-  description: 'View enhanved chess analytics from the ECF Ratings API',
+  description: 'View enhanced chess analytics from the ECF Ratings API',
 }
 
 export default function RootLayout({
