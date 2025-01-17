@@ -38,7 +38,7 @@ export default function FAQPage() {
         </div>
         <div>
           <h2 className="text-xl font-semibold mb-2">How can I support the site</h2>
-          <p><a className="text-blue-500" href="ko-fi.com/chessratinganalytics">Any donation</a> to the upkeep of the site would be greatly appreciated and would guarantee the site&apos;s existence long term. It would also help drive me to finish some more cool features.</p>
+          <p><a className="text-blue-500" href="https://ko-fi.com/chessratinganalytics">Any donation</a> to the upkeep of the site would be greatly appreciated and would guarantee the site&apos;s existence long term. It would also help drive me to finish some more cool features.</p>
         </div>
       </div>
     </div>
