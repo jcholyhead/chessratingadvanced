@@ -37,7 +37,7 @@ export default function PlayerRatingChart({ games, gameType, colorIndex }: Playe
     <Card className="w-full">
       <CardHeader>
         <CardTitle>{gameType} Rating Over Time</CardTitle>
-        <CardDescription>Chart showing how the player's {gameType.toLowerCase()} rating changes after each game</CardDescription>
+        <CardDescription>Chart showing how the player&apos;s {gameType.toLowerCase()} rating changes after each game</CardDescription>
       </CardHeader>
       <CardContent className="w-full">
         <ChartContainer
