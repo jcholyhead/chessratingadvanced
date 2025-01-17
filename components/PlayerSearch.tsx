@@ -17,6 +17,7 @@ interface Player {
   club_name: string
 }
 
+
 export default function PlayerSearch() {
   const [value, setValue] = useState("")
   const [players, setPlayers] = useState<Player[]>([])
