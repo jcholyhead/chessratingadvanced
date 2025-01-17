@@ -10,6 +10,7 @@ interface Game {
 
 interface CommonOpponentsTableProps {
   games: Game[]
+  gameType: string
 }
 
 interface OpponentStats {
@@ -21,7 +22,7 @@ interface OpponentStats {
   draws: number
 }
 
-export default function CommonOpponentsTable({ games }: CommonOpponentsTableProps) {
+export default function CommonOpponentsTable({ games, gameType }: CommonOpponentsTableProps) {
   const opponentStats = useMemo(() => {
     const stats: { [key: string]: OpponentStats } = {}
     games.forEach(game => {

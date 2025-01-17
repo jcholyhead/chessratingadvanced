@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import useSWR from 'swr'
-import { formatDate } from '@/lib/utils'
+import { formatDate } from '@/lib/appUtils'
 import PlayerRatingChart from './PlayerRatingChart'
 import CommonOpponentsTable from './CommonOpponentsTable'
 import Link from 'next/link'

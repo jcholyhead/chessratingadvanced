@@ -12,9 +12,10 @@ interface Game {
 
 interface PlayerRatingChartProps {
   games: Game[]
+  gameType: string
 }
 
-export default function PlayerRatingChart({ games }: PlayerRatingChartProps) {
+export default function PlayerRatingChart({ games, gameType }: PlayerRatingChartProps) {
   const chartData = useMemo(() => {
     return games
       .sort((a, b) => new Date(a.game_date).getTime() - new Date(b.game_date).getTime())
@@ -30,8 +31,8 @@ export default function PlayerRatingChart({ games }: PlayerRatingChartProps) {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Player Rating Over Time</CardTitle>
-        <CardDescription>Chart showing how the player&apos;s rating changes after each game</CardDescription>
+        <CardTitle>Rating Over Time</CardTitle>
+        <CardDescription>Chart showing how the player's rating changes after each game</CardDescription>
       </CardHeader>
       <CardContent className="w-full">
         <ChartContainer
