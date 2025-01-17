@@ -71,11 +71,13 @@ export default function ChessResultsTable() {
 
   const filteredGames = useMemo(() => {
     if (!data?.games) return []
-    return data.games.filter(game => 
-      game.player_rating && 
-      game.opponent_name && 
-      (game.score === 0 || game.score === 1 || game.score === 5)
-    )
+    return data.games
+      .filter(game => 
+        game.player_rating && 
+        game.opponent_name && 
+        (game.score === 0 || game.score === 1 || game.score === 5)
+      )
+      .sort((a, b) => new Date(b.game_date).getTime() - new Date(a.game_date).getTime())
   }, [data])
 
   const totalPages = Math.ceil(filteredGames.length / GAMES_PER_PAGE)
@@ -142,7 +144,9 @@ export default function ChessResultsTable() {
                             {formatDate(game.game_date)}
                           </td>
                           <td className="py-3 px-6 text-left">{game.colour}</td>
-                          <td className="py-3 px-6 text-left">{game.score}</td>
+                          <td className="py-3 px-6 text-left">
+                            {game.score === 5 ? '½' : game.score}
+                          </td>
                           <td className="py-3 px-6 text-left">
                             <Link href={`/?playerCode=${game.opponent_no}`} className="text-blue-600 hover:underline">
                               {game.opponent_name}
@@ -168,7 +172,7 @@ export default function ChessResultsTable() {
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
                   >
-                    Next
+    Next
                   </Button>
                 </div>
               </>
