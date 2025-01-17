@@ -9,12 +9,12 @@ export default function FAQPage() {
         </div>
         <div>
           <h2 className="text-xl font-semibold mb-2">Who built this site?</h2>
-          <p>My name is James Holyhead, I&apos;m a club player and software engineer based in Shropshire. We might have met, or even played each other at a Congress - now you can easily find out! You can contact me at <a href="mailto:chessratinganalytics@gmail.com">mailto:chessratinganalytics@gmail.com</a></p>
+          <p>My name is James Holyhead, I&apos;m a club player and software engineer based in Shropshire. We might have met, or even played each other at a Congress - now you can easily find out! You can contact me at <a className="text-blue-500" href="mailto:chessratinganalytics@gmail.com">chessRatingAnalytics@gmail.com</a></p>
         </div>
         <div>
           <h2 className="text-xl font-semibold mb-2">You do know about ecfrating.org.uk, right?</h2>
-          <p>This site is not intended as a replacement for the official ECF site - in fact it relies on the official ratings API for all of the data being displayed, and almost all of the credit for this site belongs to the team of volunteers who build the ECF rating system.</p>
-          <p>This site was motivated by some of the analysis and visualisations I created in spreadsheets using the ratings API and I thought that this was a tool other players might find useful or interesting. Let me know by emailing us at <a href="mailto:chessratinganalytics@gmail.com">mailto:chessratinganalytics@gmail.com</a>.</p>
+          <p>This site is not intended as a replacement for the official ECF site - in fact it relies on the official ratings API for all of the data being displayed, and almost all of the credit for this site belongs to the team of volunteers who built the ECF rating system.</p><br />
+          <p>This site was motivated by some of the analysis and visualisations I created in spreadsheets using the ratings API and I thought that this was a tool other players might find useful or interesting. Let me know by email at <a className="text-blue-500" href="mailto:chessratinganalytics@gmail.com">chessRatingAnalytics@gmail.com</a>.</p>
         </div>
         <div>
           <h2 className="text-xl font-semibold mb-2">How often are the ratings updated?</h2>
@@ -38,7 +38,7 @@ export default function FAQPage() {
         </div>
         <div>
           <h2 className="text-xl font-semibold mb-2">How can I support the site</h2>
-          <p><a href="ko-fi.com/chessratinganalytics">Any donation</a> to the upkeep of the site would be greatly appreciated and would guarantee the site&apos;s existence long term. It would also help drive me to finish some more cool features.</p>
+          <p><a className="text-blue-500" href="ko-fi.com/chessratinganalytics">Any donation</a> to the upkeep of the site would be greatly appreciated and would guarantee the site&apos;s existence long term. It would also help drive me to finish some more cool features.</p>
         </div>
       </div>
     </div>

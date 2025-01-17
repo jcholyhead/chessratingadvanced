@@ -5,7 +5,7 @@ export default function NavBar() {
     <nav className="bg-white shadow-md">
       <div className="container mx-auto px-6 py-3">
         <div className="flex justify-between items-center">
-          <div className="text-xl font-semibold text-gray-800">
+          <div className="text-2xl font-semibold text-gray-800">
             <Link href="/">Chess Rating Analytics</Link>
           </div>
           <div className="flex space-x-4">
@@ -16,7 +16,7 @@ export default function NavBar() {
               href="https://ko-fi.com/chessratinganalytics" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-blue-600 hover:text-blue-800 font-medium"
+              className="text-blue-600 hover:text-blue-800 font-bold	"
             >
               Donate
             </Link>
