@@ -5,8 +5,8 @@ import Script from 'next/script'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'Chess Results Dashboard',
-  description: 'View chess results from the ECF Ratings API',
+  title: 'Chess Ratings Dashboard',
+  description: 'View enhanced chess analytics from the ECF Ratings API',
 }
 
 export default function RootLayout({
