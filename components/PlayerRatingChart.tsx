@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 
-const PRESET_COLORS = ['#007bff', '#b434cb', '#ee115a', '#ff9800', '#2780d8'];
+const PRESET_COLORS = ['#008cdb', '#008cdb', '#008cdb', '#008cdb', '#008cdb'];
 
 interface Game {
   game_date: string
