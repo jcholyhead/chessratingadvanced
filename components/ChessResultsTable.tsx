@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import useSWR from 'swr'
 import { formatDate, calculatePerformanceRating } from '@/lib/utils'
@@ -16,6 +16,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+
+const sortGames = (games: Game[]) => {
+  return [...games].sort((a, b) => {
+    const dateA = new Date(a.game_date).getTime();
+    const dateB = new Date(b.game_date).getTime();
+    return dateB - dateA || a.opponent_name.localeCompare(b.opponent_name);
+  });
+};
 
 const PLAYER_CODES = [
   '188586J', '293875D', '105483B', '170263E', '136665J',
@@ -40,6 +48,7 @@ interface Game {
   player_rating: number
   event_name: string
   opponent_no: string
+  id?: string
 }
 
 const GAMES_PER_PAGE = 20
@@ -55,6 +64,9 @@ export default function ChessResultsTable() {
   const [playerName, setPlayerName] = useState<string | null>(null) 
   const [colorIndices, setColorIndices] = useState<{[key: string]: number}>({})
   const [performanceGameCount, setPerformanceGameCount] = useState(10)
+  const [stableFilteredGames, setStableFilteredGames] = useState<Game[]>([])
+  
+  const renderCount = useRef(0)
 
   const { data, error, isLoading } = useSWR<{ games: Game[] }>(
     `/api/chess-results?playerCode=${playerCode}&gameType=${gameType}`,
@@ -93,32 +105,58 @@ export default function ChessResultsTable() {
     }
   }, [gameType, colorIndices]);
 
-  const filteredGames = useMemo(() => {
+  useMemo(() => {
+    renderCount.current += 1;
+    console.log(`Recalculating filteredGames. Render count: ${renderCount.current}`);
+    
     if (!data?.games) return []
-    return data.games
+    
+    const games = data.games
       .filter(game => 
         game.player_rating && 
         game.opponent_name && 
         (game.score === 0 || game.score === 1 || game.score === 5)
       )
-      .sort((a, b) => new Date(b.game_date).getTime() - new Date(a.game_date).getTime())
-  }, [data])
+      .map((game, index) => ({
+        ...game,
+        id: `game-${index}-${renderCount.current}`
+      }));
+    
+    const sortedGames = sortGames(games);
+    
+    console.log('Sorted games:', sortedGames.map(g => ({ id: g.id, date: g.game_date, opponent: g.opponent_name })));
+    
+    setStableFilteredGames(sortedGames);
+    return sortedGames;
+  }, [data]);
 
-  const totalPages = useMemo(() => Math.ceil(filteredGames.length / GAMES_PER_PAGE), [filteredGames]);
+  const totalPages = useMemo(() => Math.ceil(stableFilteredGames.length / GAMES_PER_PAGE), [stableFilteredGames]);
 
   const paginatedGames = useMemo(() => {
+    const sortedGames = sortGames(stableFilteredGames);
     const startIndex = (currentPage - 1) * GAMES_PER_PAGE;
     const endIndex = startIndex + GAMES_PER_PAGE;
-    return filteredGames.slice(startIndex, endIndex);
-  }, [filteredGames, currentPage]);
+    const games = sortedGames.slice(startIndex, endIndex);
+    console.log(`Paginated games for page ${currentPage}:`, games.map(g => ({ id: g.id, date: g.game_date, opponent: g.opponent_name })));
+    return games;
+  }, [stableFilteredGames, currentPage]);
 
   const performanceRating = useMemo(() => {
-    if (filteredGames.length > 0) {
-      const recentGames = filteredGames.slice(0, performanceGameCount)
-      return calculatePerformanceRating(recentGames)
+    if (stableFilteredGames.length > 0) {
+      const sortedGames = sortGames(stableFilteredGames);
+      const gamesForCalculation = sortedGames.slice(0, performanceGameCount);
+      console.log('Performance Rating Calculation Input:', {
+        gameCount: performanceGameCount,
+        games: gamesForCalculation.map(game => ({
+          date: game.game_date,
+          opponent_rating: game.opponent_rating,
+          score: game.score
+        }))
+      });
+      return calculatePerformanceRating(gamesForCalculation)
     }
     return null
-  }, [filteredGames, performanceGameCount])
+  }, [stableFilteredGames, performanceGameCount]);
 
   const handlePreviousPage = useCallback(() => {
     setCurrentPage(prev => Math.max(prev - 1, 1));
@@ -134,7 +172,9 @@ export default function ChessResultsTable() {
   }, []);
 
   const handlePerformanceGameCountChange = useCallback((value: string) => {
-    setPerformanceGameCount(Number(value));
+    console.log('Performance Game Count Changed:', value);
+    setPerformanceGameCount(parseInt(value, 10));
+    setStableFilteredGames(prevGames => [...prevGames]); // Trigger a re-render
   }, []);
 
   if (error) return <div className="text-red-500">Failed to load: {error.message}</div>
@@ -168,7 +208,7 @@ export default function ChessResultsTable() {
                   <SelectContent>
                     {PERFORMANCE_GAME_COUNTS.map((count) => (
                       <SelectItem key={count} value={count.toString()}>
-                        Last {count} games: 
+                        Last {count} games
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -189,16 +229,16 @@ export default function ChessResultsTable() {
         </TabsList>
         {GAME_TYPES.map((type) => (
           <TabsContent key={type} value={type}>
-            {filteredGames.length > 0 ? (
+            {stableFilteredGames.length > 0 ? (
               <>
                 <div className="w-full mb-8">
                   <PlayerRatingChart 
-                    games={filteredGames} 
+                    games={stableFilteredGames} 
                     gameType={type} 
                     colorIndex={colorIndices[type] || 0} 
                   />
                 </div>
-                <CommonOpponentsTable games={filteredGames} gameType={type} />
+                <CommonOpponentsTable games={stableFilteredGames} gameType={type} />
                 <div className="overflow-x-auto mt-8">
                   <table className="min-w-full bg-white border border-gray-300">
                     <thead>
@@ -213,8 +253,8 @@ export default function ChessResultsTable() {
                       </tr>
                     </thead>
                     <tbody className="text-gray-600 text-sm font-light">
-                      {paginatedGames.map((game, index) => (
-                        <tr key={index} className="border-b border-gray-200 hover:bg-gray-100">
+                      {paginatedGames.map((game) => (
+                        <tr key={game.id} className="border-b border-gray-200 hover:bg-gray-100">
                           <td className="py-3 px-6 text-left whitespace-nowrap">
                             {formatDate(game.game_date)}
                           </td>
