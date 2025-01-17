@@ -23,6 +23,10 @@ export default function RootLayout({
           src="https://cloud.umami.is/script.js"
           data-website-id="4d71ba17-f234-45d6-b415-a1ace9193a87"
         />
+        <Script
+          src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_CHTML"
+          strategy="lazyOnload"
+        />
       </head>
       <body className={inter.className}>
         <NavBar />

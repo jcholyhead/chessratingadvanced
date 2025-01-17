@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import useSWR from 'swr'
-import { formatDate } from '@/lib/utils'
+import { formatDate, calculatePerformanceRating } from '@/lib/utils'
 import PlayerRatingChart from './PlayerRatingChart'
 import CommonOpponentsTable from './CommonOpponentsTable'
 import Link from 'next/link'
@@ -45,6 +45,7 @@ export default function ChessResultsTable() {
   const [currentPage, setCurrentPage] = useState(1)
   const [playerName, setPlayerName] = useState<string | null>(null) 
   const [colorIndices, setColorIndices] = useState<{[key: string]: number}>({})
+
   const { data, error, isLoading } = useSWR<{ games: Game[] }>(
     `/api/chess-results?playerCode=${playerCode}&gameType=${gameType}`,
     fetcher
@@ -52,12 +53,12 @@ export default function ChessResultsTable() {
 
   useEffect(() => {
     const newPlayerCode = searchParams?.get('playerCode');
-    if (newPlayerCode) {
+    if (newPlayerCode && newPlayerCode !== playerCode) {
       setPlayerCode(newPlayerCode);
       setCurrentPage(1);
-      setColorIndices({}); // Reset color indices for new player
+      setColorIndices({});
     }
-  }, [searchParams]);
+  }, [searchParams, playerCode]);
 
   useEffect(() => {
     const fetchPlayerDetails = async () => {
@@ -93,11 +94,34 @@ export default function ChessResultsTable() {
       .sort((a, b) => new Date(b.game_date).getTime() - new Date(a.game_date).getTime())
   }, [data])
 
-  const totalPages = Math.ceil(filteredGames.length / GAMES_PER_PAGE)
-  const paginatedGames = filteredGames.slice(
-    (currentPage - 1) * GAMES_PER_PAGE,
-    currentPage * GAMES_PER_PAGE
-  )
+  const totalPages = useMemo(() => Math.ceil(filteredGames.length / GAMES_PER_PAGE), [filteredGames]);
+
+  const paginatedGames = useMemo(() => {
+    const startIndex = (currentPage - 1) * GAMES_PER_PAGE;
+    const endIndex = startIndex + GAMES_PER_PAGE;
+    return filteredGames.slice(startIndex, endIndex);
+  }, [filteredGames, currentPage]);
+
+  const performanceRating = useMemo(() => {
+    if (filteredGames.length >= 10) {
+      const recentGames = filteredGames.slice(0, 10)
+      return calculatePerformanceRating(recentGames)
+    }
+    return null
+  }, [filteredGames])
+
+  const handlePreviousPage = useCallback(() => {
+    setCurrentPage(prev => Math.max(prev - 1, 1));
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  }, [totalPages]);
+
+  const handlePlayerCodeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setPlayerCode(e.target.value);
+    setCurrentPage(1);
+  }, []);
 
   if (error) return <div className="text-red-500">Failed to load: {error.message}</div>
   if (isLoading) return <div className="text-blue-500">Loading...</div>
@@ -115,9 +139,14 @@ export default function ChessResultsTable() {
               type="text"
               id="playerCode"
               value={playerCode}
-              onChange={(e) => setPlayerCode(e.target.value)}
+              onChange={handlePlayerCodeChange}
               className="border p-1 rounded"
             />
+            {performanceRating !== null && (
+              <p className="mt-2 text-sm">
+                Performance Rating (last 10 games): <span className="font-semibold">{performanceRating}</span>
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -179,14 +208,14 @@ export default function ChessResultsTable() {
                 </div>
                 <div className="flex justify-between items-center mt-4">
                   <Button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    onClick={handlePreviousPage}
                     disabled={currentPage === 1}
                   >
                     Previous
                   </Button>
                   <span>Page {currentPage} of {totalPages}</span>
                   <Button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    onClick={handleNextPage}
                     disabled={currentPage === totalPages}
                   >
                     Next

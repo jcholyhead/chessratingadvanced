@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input } from "@/components/ui/input"
 import {
@@ -17,20 +17,42 @@ interface Player {
   club_name: string
 }
 
-export default function PlayerSearch() {
+interface PlayerSearchProps {
+  initialPlayerCode: string | null
+}
+
+export default function PlayerSearch({ initialPlayerCode }: PlayerSearchProps) {
   const [value, setValue] = useState("")
   const [players, setPlayers] = useState<Player[]>([])
   const router = useRouter()
 
-  useEffect(() => {
-    if (value.length >= 3) {
-      fetch(`/api/player-search?name=${value}`)
-        .then(res => res.json())
-        .then(data => setPlayers(data.players || []))
+  const fetchPlayers = useCallback(async (searchValue: string) => {
+    if (searchValue.length >= 3) {
+      try {
+        const res = await fetch(`/api/player-search?name=${searchValue}`)
+        const data = await res.json()
+        setPlayers(data.players || [])
+      } catch (error) {
+        console.error('Error fetching players:', error)
+        setPlayers([])
+      }
     } else {
       setPlayers([])
     }
-  }, [value])
+  }, [])
+
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      fetchPlayers(value)
+    }, 300)
+
+    return () => clearTimeout(debounceTimer)
+  }, [value, fetchPlayers])
+
+  useEffect(() => {
+    setValue("")
+    setPlayers([])
+  }, [initialPlayerCode])
 
   const sortedPlayers = useMemo(() => {
     return [...players].sort((a, b) => {
@@ -42,6 +64,12 @@ export default function PlayerSearch() {
       return aSurname.localeCompare(bSurname)
     })
   }, [players])
+
+  const handleSelect = useCallback((playerCode: string) => {
+    setValue("")
+    setPlayers([])
+    router.push(`/?playerCode=${playerCode}`)
+  }, [router])
 
   return (
     <div className="relative">
@@ -60,10 +88,7 @@ export default function PlayerSearch() {
                 {sortedPlayers.map((player) => (
                   <CommandItem
                     key={player.ECF_code}
-                    onSelect={() => {
-                      setValue(player.full_name)
-                      router.push(`/?playerCode=${player.ECF_code}`)
-                    }}
+                    onSelect={() => handleSelect(player.ECF_code)}
                   >
                     <span>{player.full_name}</span>
                     <span className="ml-2 text-sm text-muted-foreground">({player.club_name})</span>
