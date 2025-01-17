@@ -49,8 +49,8 @@ export default function CommonOpponentsTable({ games, gameType }: CommonOpponent
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Most Common Opponents</CardTitle>
-        <CardDescription>Top 10 opponents by number of games played</CardDescription>
+        <CardTitle>Most Common {gameType} Opponents</CardTitle>
+        <CardDescription>Top 10 opponents by number of {gameType.toLowerCase()} games played</CardDescription>
       </CardHeader>
       <CardContent>
         <table className="w-full">
