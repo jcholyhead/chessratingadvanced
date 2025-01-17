@@ -9,6 +9,13 @@ import CommonOpponentsTable from './CommonOpponentsTable'
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 const PLAYER_CODES = [
   '188586J', '293875D', '105483B', '170263E', '136665J',
@@ -19,6 +26,8 @@ const PLAYER_CODES = [
 const GAME_TYPES = ['Standard', 'Rapid', 'Blitz'];
 
 const PRESET_COLORS = ['#E76E50', '#E76E50', '#E76E50', '#E76E50', '#E76E50'];
+
+const PERFORMANCE_GAME_COUNTS = [5, 10, 15, 20, 25, 30, 40, 50];
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -45,6 +54,7 @@ export default function ChessResultsTable() {
   const [currentPage, setCurrentPage] = useState(1)
   const [playerName, setPlayerName] = useState<string | null>(null) 
   const [colorIndices, setColorIndices] = useState<{[key: string]: number}>({})
+  const [performanceGameCount, setPerformanceGameCount] = useState(10)
 
   const { data, error, isLoading } = useSWR<{ games: Game[] }>(
     `/api/chess-results?playerCode=${playerCode}&gameType=${gameType}`,
@@ -103,12 +113,12 @@ export default function ChessResultsTable() {
   }, [filteredGames, currentPage]);
 
   const performanceRating = useMemo(() => {
-    if (filteredGames.length >= 10) {
-      const recentGames = filteredGames.slice(0, 10)
+    if (filteredGames.length > 0) {
+      const recentGames = filteredGames.slice(0, performanceGameCount)
       return calculatePerformanceRating(recentGames)
     }
     return null
-  }, [filteredGames])
+  }, [filteredGames, performanceGameCount])
 
   const handlePreviousPage = useCallback(() => {
     setCurrentPage(prev => Math.max(prev - 1, 1));
@@ -121,6 +131,10 @@ export default function ChessResultsTable() {
   const handlePlayerCodeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setPlayerCode(e.target.value);
     setCurrentPage(1);
+  }, []);
+
+  const handlePerformanceGameCountChange = useCallback((value: string) => {
+    setPerformanceGameCount(Number(value));
   }, []);
 
   if (error) return <div className="text-red-500">Failed to load: {error.message}</div>
@@ -143,9 +157,24 @@ export default function ChessResultsTable() {
               className="border p-1 rounded"
             />
             {performanceRating !== null && (
-              <p className="mt-2 text-sm">
-                Performance Rating (last 10 games): <span className="font-semibold">{performanceRating}</span>
-              </p>
+              <div className="mt-2 flex items-center space-x-1 mr-2">
+                <p className="text-sm mr-2">
+                  Performance Rating:
+                </p>
+                <Select onValueChange={handlePerformanceGameCountChange} value={performanceGameCount.toString()}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select game count" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PERFORMANCE_GAME_COUNTS.map((count) => (
+                      <SelectItem key={count} value={count.toString()}>
+                        Last {count} games: 
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="ml-2 font-semibold">{performanceRating}</span>
+              </div>
             )}
           </div>
         </div>

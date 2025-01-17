@@ -15,10 +15,12 @@ export function formatDate(dateString: string): string {
 }
 
 export function calculatePerformanceRating(games: { opponent_rating: number; score: number }[]): number {
-  const recentGames = games.slice(0, 10);
-  const rc = recentGames.reduce((sum, game) => sum + game.opponent_rating, 0) / recentGames.length;
-  const totalScore = recentGames.reduce((sum, game) => sum + (game.score === 5 ? 0.5 : game.score), 0);
-  const p = totalScore / recentGames.length;
+  const gameCount = games.length;
+  if (gameCount === 0) return 0;
+
+  const rc = games.reduce((sum, game) => sum + game.opponent_rating, 0) / gameCount;
+  const totalScore = games.reduce((sum, game) => sum + (game.score === 5 ? 0.5 : game.score), 0);
+  const p = totalScore / gameCount;
   const dp = 800 * p - 400;
   return Math.round(rc + dp);
 }
