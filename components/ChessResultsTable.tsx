@@ -18,7 +18,7 @@ const PLAYER_CODES = [
 
 const GAME_TYPES = ['Standard', 'Rapid', 'Blitz'];
 
-const PRESET_COLORS = ['#008cdb', '#008cdb', '#008cdb', '#008cdb', '#008cdb'];
+const PRESET_COLORS = ['#E76E50', '#E76E50', '#E76E50', '#E76E50', '#E76E50'];
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
