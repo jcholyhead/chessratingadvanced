@@ -26,7 +26,7 @@ const GAMES_PER_PAGE = 20
 
 export default function ChessResultsTable() {
   const searchParams = useSearchParams()
-  const [playerCode, setPlayerCode] = useState(searchParams.get('playerCode') || '319013E')
+  const [playerCode, setPlayerCode] = useState(searchParams?.get('playerCode') || '319013E')
   const [currentPage, setCurrentPage] = useState(1)
   const { data, error, isLoading } = useSWR<{ games: Game[] }>(
     `/api/chess-results?playerCode=${playerCode}`,
@@ -34,7 +34,7 @@ export default function ChessResultsTable() {
   )
 
   useEffect(() => {
-    const newPlayerCode = searchParams.get('playerCode')
+    const newPlayerCode = searchParams?.get('playerCode')
     if (newPlayerCode) {
       setPlayerCode(newPlayerCode)
       setCurrentPage(1)

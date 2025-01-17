@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import ChessResultsTable from '@/components/ChessResultsTable'
 import PlayerSearch from '@/components/PlayerSearch'
 
@@ -8,7 +9,9 @@ export default function Home() {
       <div className="mb-4">
         <PlayerSearch />
       </div>
-      <ChessResultsTable />
+      <Suspense fallback={<div>Loading...</div>}>
+        <ChessResultsTable />
+      </Suspense>
     </div>
   )
 }
