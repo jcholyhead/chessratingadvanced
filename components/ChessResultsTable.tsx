@@ -18,6 +18,8 @@ const PLAYER_CODES = [
 
 const GAME_TYPES = ['Standard', 'Rapid', 'Blitz'];
 
+const PRESET_COLORS = ['#007bff', '#b434cb', '#ee115a', '#ff9800', '#2780d8'];
+
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 interface Game {
@@ -42,6 +44,7 @@ export default function ChessResultsTable() {
   const [gameType, setGameType] = useState('Standard')
   const [currentPage, setCurrentPage] = useState(1)
   const [playerName, setPlayerName] = useState<string | null>(null) 
+  const [colorIndices, setColorIndices] = useState<{[key: string]: number}>({})
   const { data, error, isLoading } = useSWR<{ games: Game[] }>(
     `/api/chess-results?playerCode=${playerCode}&gameType=${gameType}`,
     fetcher
@@ -52,6 +55,7 @@ export default function ChessResultsTable() {
     if (newPlayerCode) {
       setPlayerCode(newPlayerCode);
       setCurrentPage(1);
+      setColorIndices({}); // Reset color indices for new player
     }
   }, [searchParams]);
 
@@ -68,6 +72,15 @@ export default function ChessResultsTable() {
 
     fetchPlayerDetails()
   }, [playerCode]) 
+
+  useEffect(() => {
+    if (!colorIndices[gameType]) {
+      setColorIndices(prev => ({
+        ...prev,
+        [gameType]: Math.floor(Math.random() * PRESET_COLORS.length)
+      }));
+    }
+  }, [gameType, colorIndices]);
 
   const filteredGames = useMemo(() => {
     if (!data?.games) return []
@@ -121,7 +134,11 @@ export default function ChessResultsTable() {
             {filteredGames.length > 0 ? (
               <>
                 <div className="w-full mb-8">
-                  <PlayerRatingChart games={filteredGames} gameType={type} />
+                  <PlayerRatingChart 
+                    games={filteredGames} 
+                    gameType={type} 
+                    colorIndex={colorIndices[type] || 0} 
+                  />
                 </div>
                 <CommonOpponentsTable games={filteredGames} gameType={type} />
                 <div className="overflow-x-auto mt-8">
@@ -172,7 +189,7 @@ export default function ChessResultsTable() {
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
                   >
-    Next
+                    Next
                   </Button>
                 </div>
               </>

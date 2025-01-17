@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 
+const PRESET_COLORS = ['#007bff', '#b434cb', '#ee115a', '#ff9800', '#2780d8'];
+
 interface Game {
   game_date: string
   player_rating: number
@@ -13,9 +15,10 @@ interface Game {
 interface PlayerRatingChartProps {
   games: Game[]
   gameType: string
+  colorIndex: number
 }
 
-export default function PlayerRatingChart({ games, gameType }: PlayerRatingChartProps) {
+export default function PlayerRatingChart({ games, gameType, colorIndex }: PlayerRatingChartProps) {
   const chartData = useMemo(() => {
     return games
       .sort((a, b) => new Date(a.game_date).getTime() - new Date(b.game_date).getTime())
@@ -28,6 +31,8 @@ export default function PlayerRatingChart({ games, gameType }: PlayerRatingChart
   const minRating = Math.min(...games.map(game => game.player_rating))
   const maxRating = Math.max(...games.map(game => game.player_rating))
 
+  const chartColor = PRESET_COLORS[colorIndex]
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -39,7 +44,7 @@ export default function PlayerRatingChart({ games, gameType }: PlayerRatingChart
           config={{
             rating: {
               label: "Rating",
-              color: "hsl(var(--chart-1))",
+              color: chartColor,
             },
           }}
           className="h-[400px] w-full"
@@ -60,7 +65,7 @@ export default function PlayerRatingChart({ games, gameType }: PlayerRatingChart
               <Line 
                 type="monotone" 
                 dataKey="rating" 
-                stroke="var(--color-rating)" 
+                stroke={chartColor}
                 strokeWidth={2} 
                 dot={false} 
                 activeDot={{ r: 8 }}
