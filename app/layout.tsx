@@ -6,7 +6,7 @@ import NavBar from '@/components/NavBar'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'Chess Ratings Dashboard',
+  title: 'Chess Rating Analytics',
   description: 'View enhanced chess analytics from the ECF Ratings API',
 }
 
