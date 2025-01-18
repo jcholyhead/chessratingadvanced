@@ -166,12 +166,12 @@ export default function ChessResultsTable() {
       // names.push("Dylan"); // no error  
       const today = new Date()
       const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      console.log("first day of month: " + firstDayOfMonth)
+      // console.log("first day of month: " + firstDayOfMonth)
       const gameDate = new Date(games[0].game_date);
-      console.log("Game Date: " + gameDate )
+      // console.log("Game Date: " + gameDate )
       if (gameDate < firstDayOfMonth){
         setLiveRating(null)
-        console.log("Setting live rating to " + officialRating)
+        // console.log("Setting live rating to " + officialRating)
       } else {
       
         const game0 = games[0];
