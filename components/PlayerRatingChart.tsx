@@ -5,20 +5,45 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 
+/**
+ * Array of preset colors for the chart lines
+ */
 const PRESET_COLORS = ['#E76E50', '#E76E50', '#E76E50', '#E76E50', '#E76E50'];
 
+/**
+ * Represents a single game in the player's history
+ */
 interface Game {
   game_date: string
   player_rating: number
 }
 
+/**
+ * Props for the PlayerRatingChart component
+ */
 interface PlayerRatingChartProps {
   games: Game[]
   gameType: string
   colorIndex: number
 }
 
+/**
+ * PlayerRatingChart Component
+ * 
+ * This component renders a line chart showing a player's rating changes over time
+ * for a specific game type (Standard, Rapid, or Blitz).
+ * 
+ * @param games - An array of Game objects representing the player's game history
+ * @param gameType - The type of chess game (e.g., 'Standard', 'Rapid', 'Blitz')
+ * @param colorIndex - Index to select a color from the PRESET_COLORS array
+ * 
+ * @returns A card containing a line chart of the player's rating over time
+ */
 export default function PlayerRatingChart({ games, gameType, colorIndex }: PlayerRatingChartProps) {
+  /**
+   * Processes the games data for the chart
+   * Sorts games by date and formats the data for the Recharts component
+   */
   const chartData = useMemo(() => {
     return games
       .sort((a, b) => new Date(a.game_date).getTime() - new Date(b.game_date).getTime())
@@ -28,16 +53,18 @@ export default function PlayerRatingChart({ games, gameType, colorIndex }: Playe
       }))
   }, [games])
 
+  // Calculate the minimum and maximum ratings for the Y-axis domain
   const minRating = Math.min(...games.map(game => game.player_rating))
   const maxRating = Math.max(...games.map(game => game.player_rating))
 
+  // Select the chart color based on the provided index
   const chartColor = PRESET_COLORS[colorIndex]
 
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle>{gameType} Rating Over Time</CardTitle>
-        <CardDescription>Chart showing how the player&apos;s {gameType.toLowerCase()} rating changes after each game</CardDescription>
+        <CardDescription>Chart showing how the player's {gameType.toLowerCase()} rating changes after each game</CardDescription>
       </CardHeader>
       <CardContent className="w-full">
         <ChartContainer

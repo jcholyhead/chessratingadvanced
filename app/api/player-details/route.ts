@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+/**
+ * GET handler for player details
+ * @param request - The incoming request object
+ * @returns A response with the player details or an error message
+ */
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const playerCode = searchParams.get('playerCode')

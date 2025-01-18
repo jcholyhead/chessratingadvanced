@@ -19,6 +19,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
+// Define the structure of a game object
 interface Game {
   game_date: string
   event_code: string
@@ -31,10 +32,12 @@ interface Game {
   opponent_no: string
 }
 
+// Define the props for the EventList component
 interface EventListProps {
   games: Game[]
 }
 
+// Define the structure of an event object
 interface Event {
   eventCode: string
   eventName: string
@@ -45,11 +48,14 @@ interface Event {
 }
 
 export default function EventList({ games }: EventListProps) {
+  // State to keep track of which events are expanded
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set())
 
+  // Memoized calculation of events from games
   const events = useMemo(() => {
     const eventMap = new Map<string, Event>()
 
+    // Group games by event
     games.forEach(game => {
       if (!eventMap.has(game.event_code)) {
         eventMap.set(game.event_code, {
@@ -68,6 +74,7 @@ export default function EventList({ games }: EventListProps) {
       event.endDate = game.game_date > event.endDate ? game.game_date : event.endDate
     })
 
+    // Calculate performance rating for each event and sort events by end date
     return Array.from(eventMap.values())
       .map(event => ({
         ...event,
@@ -76,6 +83,7 @@ export default function EventList({ games }: EventListProps) {
       .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())
   }, [games])
 
+  // Function to toggle the expanded state of an event
   const toggleEvent = (eventCode: string) => {
     setExpandedEvents(prev => {
       const newSet = new Set(prev)
@@ -104,6 +112,7 @@ export default function EventList({ games }: EventListProps) {
         <TableBody>
           {events.map((event) => (
             <React.Fragment key={event.eventCode}>
+              {/* Event row */}
               <TableRow className="border-b border-gray-200 hover:bg-gray-100">
                 <TableCell className="py-3 px-6 text-left whitespace-nowrap">{event.eventName}</TableCell>
                 <TableCell className="py-3 px-6 text-left">{formatDate(event.startDate)}</TableCell>
@@ -112,6 +121,7 @@ export default function EventList({ games }: EventListProps) {
                   <span className={event.games.length < 3 ? "text-gray-500" : ""}>
                     {event.performanceRating}
                   </span>
+                  {/* Show tooltip for unreliable performance ratings */}
                   {event.games.length < 3 && (
                     <TooltipProvider>
                       <Tooltip>
@@ -141,6 +151,7 @@ export default function EventList({ games }: EventListProps) {
                   </Button>
                 </TableCell>
               </TableRow>
+              {/* Expanded game details */}
               {expandedEvents.has(event.eventCode) && (
                 <TableRow>
                   <TableCell colSpan={6} className="p-0">

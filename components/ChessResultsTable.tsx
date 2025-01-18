@@ -20,6 +20,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import EventList from './EventList'
 
+// Helper function to sort games by date and opponent name
 const sortGames = (games: Game[]) => {
   return [...games].sort((a, b) => {
     const dateA = new Date(a.game_date).getTime();
@@ -28,18 +29,15 @@ const sortGames = (games: Game[]) => {
   });
 };
 
+// Constants
 const PLAYER_CODES = [
   '188586J', '293875D', '105483B', '170263E', '136665J',
   '245324B', '175386B', '263810B', '252763H', '300121A',
   '123515B', '103888G', '329301E', '305272C', '258871H'
 ];
-
 const GAME_TYPES = ['Standard', 'Rapid', 'Blitz'];
-
 const PRESET_COLORS = ['#E76E50', '#E76E50', '#E76E50', '#E76E50', '#E76E50'];
-
 const PERFORMANCE_GAME_COUNTS = [5, 10, 15, 20, 25, 30, 40, 50];
-
 const TIME_RANGES = [
   { label: 'All-time', value: 'all' },
   { label: '2y', value: '2y' },
@@ -47,9 +45,12 @@ const TIME_RANGES = [
   { label: '6m', value: '6m' },
   { label: '3m', value: '3m' },
 ];
+const GAMES_PER_PAGE = 20
 
+// SWR fetcher function
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
+// Game interface
 interface Game {
   game_date: string
   colour: string
@@ -63,9 +64,8 @@ interface Game {
   event_code: string
 }
 
-const GAMES_PER_PAGE = 20
-
 export default function ChessResultsTable() {
+  // State variables
   const searchParams = useSearchParams()
   const [playerCode, setPlayerCode] = useState(() => {
     const urlPlayerCode = searchParams?.get('playerCode');
@@ -78,15 +78,17 @@ export default function ChessResultsTable() {
   const [performanceGameCount, setPerformanceGameCount] = useState(10)
   const [stableFilteredGames, setStableFilteredGames] = useState<Game[]>([])
   const [timeRange, setTimeRange] = useState('all')
-  const [groupByEvent, setGroupByEvent] = useState(true) // Update here
+  const [groupByEvent, setGroupByEvent] = useState(true)
 
   const renderCount = useRef(0)
 
+  // Fetch chess results data
   const { data, error, isLoading } = useSWR<{ games: Game[] }>(
     `/api/chess-results?playerCode=${playerCode}&gameType=${gameType}`,
     fetcher
   )
 
+  // Update player code when URL changes
   useEffect(() => {
     const newPlayerCode = searchParams?.get('playerCode');
     if (newPlayerCode && newPlayerCode !== playerCode) {
@@ -96,6 +98,7 @@ export default function ChessResultsTable() {
     }
   }, [searchParams, playerCode]);
 
+  // Fetch player details
   useEffect(() => {
     const fetchPlayerDetails = async () => {
       try {
@@ -110,6 +113,7 @@ export default function ChessResultsTable() {
     fetchPlayerDetails()
   }, [playerCode]) 
 
+  // Set color indices for charts
   useEffect(() => {
     if (!colorIndices[gameType]) {
       setColorIndices(prev => ({
@@ -119,6 +123,7 @@ export default function ChessResultsTable() {
     }
   }, [gameType, colorIndices]);
 
+  // Process and filter games data
   useEffect(() => {
     if (data?.games) {
       const games = data.games
@@ -140,6 +145,7 @@ export default function ChessResultsTable() {
     }
   }, [data]);
 
+  // Apply time range filter
   const timeFilteredGames = useMemo(() => {
     const now = new Date();
     const filterDate = new Date();
@@ -162,8 +168,10 @@ export default function ChessResultsTable() {
     return sortGames(stableFilteredGames.filter(game => new Date(game.game_date) >= filterDate));
   }, [stableFilteredGames, timeRange]);
 
+  // Calculate total pages for pagination
   const totalPages = useMemo(() => Math.ceil(timeFilteredGames.length / GAMES_PER_PAGE), [timeFilteredGames]);
 
+  // Get paginated games
   const paginatedGames = useMemo(() => {
     const startIndex = (currentPage - 1) * GAMES_PER_PAGE;
     const endIndex = startIndex + GAMES_PER_PAGE;
@@ -173,6 +181,7 @@ export default function ChessResultsTable() {
     return games;
   }, [timeFilteredGames, currentPage]);
 
+  // Calculate performance rating
   const performanceRating = useMemo(() => {
     if (stableFilteredGames.length > 0) {
       const sortedGames = sortGames(stableFilteredGames);
@@ -190,6 +199,7 @@ export default function ChessResultsTable() {
     return null
   }, [stableFilteredGames, performanceGameCount]);
 
+  // Event handlers
   const handlePreviousPage = useCallback(() => {
     setCurrentPage(prev => Math.max(prev - 1, 1));
   }, []);
@@ -214,11 +224,14 @@ export default function ChessResultsTable() {
     setCurrentPage(1);
   }, []);
 
+  // Error and loading states
   if (error) return <div className="text-red-500">Failed to load: {error.message}</div>
   if (isLoading) return <div className="text-blue-500">Loading...</div>
 
+  // Render component
   return (
     <div className="space-y-8 w-full">
+      {/* Player information and performance rating */}
       <div className="mb-4"> 
         {playerName && <h2 className="text-2xl font-bold mb-2">{playerName}</h2>}
         <div className="flex items-center gap-4">
@@ -256,6 +269,8 @@ export default function ChessResultsTable() {
           </div>
         </div>
       </div>
+
+      {/* Game type tabs and time range selector */}
       <Tabs value={gameType} onValueChange={setGameType}>
         <TabsList>
           {GAME_TYPES.map((type) => (

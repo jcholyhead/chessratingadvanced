@@ -11,21 +11,41 @@ import {
   CommandList,
 } from "@/components/ui/command"
 
+/**
+ * Represents a player in the ECF database
+ */
 interface Player {
   full_name: string
   ECF_code: string
   club_name: string
 }
 
+/**
+ * Props for the PlayerSearch component
+ */
 interface PlayerSearchProps {
   initialPlayerCode: string | null
 }
 
+/**
+ * PlayerSearch Component
+ * 
+ * This component provides a search functionality for ECF-rated players.
+ * It includes an autocomplete feature that shows matching players as the user types.
+ * 
+ * @param initialPlayerCode - The initial player code to populate the search (if any)
+ * 
+ * @returns A search input with autocomplete functionality for finding chess players
+ */
 export default function PlayerSearch({ initialPlayerCode }: PlayerSearchProps) {
   const [value, setValue] = useState("")
   const [players, setPlayers] = useState<Player[]>([])
   const router = useRouter()
 
+  /**
+   * Fetches players based on the search value
+   * @param searchValue - The string to search for in player names
+   */
   const fetchPlayers = useCallback(async (searchValue: string) => {
     if (searchValue.length >= 3) {
       try {
@@ -41,6 +61,7 @@ export default function PlayerSearch({ initialPlayerCode }: PlayerSearchProps) {
     }
   }, [])
 
+  // Debounce the search input to reduce API calls
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
       fetchPlayers(value)
@@ -49,11 +70,15 @@ export default function PlayerSearch({ initialPlayerCode }: PlayerSearchProps) {
     return () => clearTimeout(debounceTimer)
   }, [value, fetchPlayers])
 
+  // Reset the search when the initial player code changes
   useEffect(() => {
     setValue("")
     setPlayers([])
   }, [initialPlayerCode])
 
+  /**
+   * Sorts players by surname, then forename
+   */
   const sortedPlayers = useMemo(() => {
     return [...players].sort((a, b) => {
       const [aSurname, aForename] = a.full_name.split(',').map(s => s.trim())
@@ -65,6 +90,10 @@ export default function PlayerSearch({ initialPlayerCode }: PlayerSearchProps) {
     })
   }, [players])
 
+  /**
+   * Handles the selection of a player from the search results
+   * @param playerCode - The ECF code of the selected player
+   */
   const handleSelect = useCallback((playerCode: string) => {
     setValue("")
     setPlayers([])

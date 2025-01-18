@@ -2,17 +2,26 @@ import { useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from 'next/link'
 
+/**
+ * Represents a single game in the chess results
+ */
 interface Game {
   opponent_name: string
   opponent_no: string
   score: number
 }
 
+/**
+ * Props for the CommonOpponentsTable component
+ */
 interface CommonOpponentsTableProps {
   games: Game[]
   gameType: string
 }
 
+/**
+ * Represents statistics for a single opponent
+ */
 interface OpponentStats {
   name: string
   opponent_no: string
@@ -22,7 +31,19 @@ interface OpponentStats {
   draws: number
 }
 
+/**
+ * CommonOpponentsTable Component
+ * 
+ * This component displays a table of the most common opponents a player has faced,
+ * along with statistics for games played against each opponent.
+ * 
+ * @param games - An array of Game objects representing all games played
+ * @param gameType - The type of chess game (e.g., 'Standard', 'Rapid', 'Blitz')
+ * 
+ * @returns A table displaying the top 10 most common opponents and their statistics
+ */
 export default function CommonOpponentsTable({ games, gameType }: CommonOpponentsTableProps) {
+  // Calculate opponent statistics
   const opponentStats = useMemo(() => {
     const stats: { [key: string]: OpponentStats } = {}
     games.forEach(game => {
