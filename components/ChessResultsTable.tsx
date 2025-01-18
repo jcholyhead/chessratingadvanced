@@ -164,34 +164,36 @@ export default function ChessResultsTable() {
 
 
       // names.push("Dylan"); // no error  
-      const today = new Date()
-      const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      // console.log("first day of month: " + firstDayOfMonth)
-      const gameDate = new Date(games[0].game_date);
-      // console.log("Game Date: " + gameDate )
-      if (gameDate < firstDayOfMonth){
-        setLiveRating(null)
-        // console.log("Setting live rating to " + officialRating)
-      } else {
-      
-        const game0 = games[0];
-        const game1 = games[1];
+    try {
+        const today = new Date()
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        // console.log("first day of month: " + firstDayOfMonth)
+        const gameDate = new Date(games[0].game_date);
+        // console.log("Game Date: " + gameDate )
+        if (gameDate < firstDayOfMonth){
+          setLiveRating(null)
+          // console.log("Setting live rating to " + officialRating)
+        } else {
+        
+          const game0 = games[0];
+          const game1 = games[1];
 
-        try {
-          if (game0.game_date != game1.game_date) { 
-            setLiveRating(game0.player_rating);
-          } else {
-            if (game0.player_rating - (game1.player_rating + game0.increment) < 1) {
+          
+            if (game0.game_date != game1.game_date) { 
               setLiveRating(game0.player_rating);
-            } else if (game1.player_rating - (game0.player_rating + game1.increment) < 1) {
-              setLiveRating(game1.player_rating);
+            } else {
+              if (game0.player_rating - (game1.player_rating + game0.increment) < 1) {
+                setLiveRating(game0.player_rating);
+              } else if (game1.player_rating - (game0.player_rating + game1.increment) < 1) {
+                setLiveRating(game1.player_rating);
+              }
             }
-          }
-        } catch {
-          setLiveRating(null);
         }
-      
+    } catch {
+      setLiveRating(null);
     }
+
+
       const sortedGames = sortGames(games);
       
       //console.log('Sorted games:', sortedGames.map(g => ({ id: g.id, date: g.game_date, opponent: g.opponent_name })));
