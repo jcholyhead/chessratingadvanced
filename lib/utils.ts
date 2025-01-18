@@ -47,30 +47,30 @@ export function formatDate(dateString: string): string {
  * const performanceRating = calculatePerformanceRating(games);
  */
 export function calculatePerformanceRating(games: { opponent_rating: number; score: number }[]): number {
-  console.log('Calculating Performance Rating for games:', games);
+  //console.log('Calculating Performance Rating for games:', games);
 
   const gameCount = games.length;
   if (gameCount === 0) return 0;
 
   // Calculate average opponent rating
   const rc = games.reduce((sum, game) => sum + game.opponent_rating, 0) / gameCount;
-  console.log('Average opponent rating (rc):', rc);
+  //console.log('Average opponent rating (rc):', rc);
 
   // Calculate total score (0.5 for draws)
   const totalScore = games.reduce((sum, game) => sum + (game.score === 5 ? 0.5 : game.score), 0);
-  console.log('Total score:', totalScore);
+  //console.log('Total score:', totalScore);
 
   // Calculate performance (percentage score)
   const p = totalScore / gameCount;
-  console.log('Performance (p):', p);
+  //console.log('Performance (p):', p);
 
   // Calculate rating difference based on performance
   const dp = Math.round(800 * p - 400);
-  console.log('Rating difference (dp):', dp);
+  //console.log('Rating difference (dp):', dp);
 
   // Calculate final performance rating
   const performanceRating = Math.round(rc + dp);
-  console.log('Final Performance Rating:', performanceRating);
+  //console.log('Final Performance Rating:', performanceRating);
 
   return performanceRating;
 }

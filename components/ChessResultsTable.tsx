@@ -133,28 +133,7 @@ export default function ChessResultsTable() {
     if (data?.games && data.games.length > 0) {
       // Find the first non-empty player_rating
       
-      const game0 = data.games[0];
-      const game1 = data.games[1];
-
-
-      try {
-        if (game0.game_date != game1.game_date) { 
-          setLiveRating(game0.player_rating);
-        } else {
-          if (game0.player_rating - (game1.player_rating + game0.increment) < 1) {
-            setLiveRating(game0.player_rating);
-          } else if (game1.player_rating - (game0.player_rating + game1.increment) < 1) {
-            setLiveRating(game1.player_rating);
-          }
-        }
-      } catch {
-        setLiveRating(null);
-      }
-
-
-      //const firstValidRating = data.games.find(game => game.player_rating != null && game.player_rating !== '')?.player_rating ?? null;
-      //setLiveRating(firstValidRating);
-
+      
       const games = data.games
         .filter(game => 
           game.player_rating && 
@@ -165,10 +144,57 @@ export default function ChessResultsTable() {
           ...game,
           id: `game-${index}-${renderCount.current}`
         }));
+
+      // const sameDayGames: Game[] = [];
+      // const recentGameDate = games[0].game_date;
       
+
+      // let ix:number = 0;  
+      
+      // while(games[ix].game_date === recentGameDate) { 
+      //    sameDayGames.push(games[ix])
+      //    ix += 1
+      // } 
+      
+      // if (sameDayGames.length === 1) {
+      //   setLiveRating(games[0].player_rating);
+      // } else {
+      //   //calculate last game. 
+      // }
+
+
+      // names.push("Dylan"); // no error  
+      const today = new Date()
+      const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      // console.log("first day of month: " + firstDayOfMonth)
+      const gameDate = new Date(games[0].game_date);
+      // console.log("Game Date: " + gameDate )
+      if (gameDate < firstDayOfMonth){
+        setLiveRating(null)
+        // console.log("Setting live rating to " + officialRating)
+      } else {
+      
+        const game0 = games[0];
+        const game1 = games[1];
+
+        try {
+          if (game0.game_date != game1.game_date) { 
+            setLiveRating(game0.player_rating);
+          } else {
+            if (game0.player_rating - (game1.player_rating + game0.increment) < 1) {
+              setLiveRating(game0.player_rating);
+            } else if (game1.player_rating - (game0.player_rating + game1.increment) < 1) {
+              setLiveRating(game1.player_rating);
+            }
+          }
+        } catch {
+          setLiveRating(null);
+        }
+      
+    }
       const sortedGames = sortGames(games);
       
-      console.log('Sorted games:', sortedGames.map(g => ({ id: g.id, date: g.game_date, opponent: g.opponent_name })));
+      //console.log('Sorted games:', sortedGames.map(g => ({ id: g.id, date: g.game_date, opponent: g.opponent_name })));
       
       setStableFilteredGames(sortedGames);
     } else {
@@ -209,7 +235,7 @@ export default function ChessResultsTable() {
     const endIndex = startIndex + GAMES_PER_PAGE;
     const sortedGames = sortGames(timeFilteredGames);
     const games = sortedGames.slice(startIndex, endIndex);
-    console.log(`Paginated games for page ${currentPage}:`, games.map(g => ({ id: g.id, date: g.game_date, opponent: g.opponent_name })));
+    //console.log(`Paginated games for page ${currentPage}:`, games.map(g => ({ id: g.id, date: g.game_date, opponent: g.opponent_name })));
     return games;
   }, [timeFilteredGames, currentPage]);
 
@@ -218,14 +244,14 @@ export default function ChessResultsTable() {
     if (stableFilteredGames.length > 0) {
       const sortedGames = sortGames(stableFilteredGames);
       const gamesForCalculation = sortedGames.slice(0, performanceGameCount);
-      console.log('Performance Rating Calculation Input:', {
-        gameCount: performanceGameCount,
-        games: gamesForCalculation.map(game => ({
-          date: game.game_date,
-          opponent_rating: game.opponent_rating,
-          score: game.score
-        }))
-      });
+      // console.log('Performance Rating Calculation Input:', {
+      //   gameCount: performanceGameCount,
+      //   games: gamesForCalculation.map(game => ({
+      //     date: game.game_date,
+      //     opponent_rating: game.opponent_rating,
+      //     score: game.score
+      //   }))
+      // });
       return calculatePerformanceRating(gamesForCalculation)
     }
     return null
@@ -246,7 +272,7 @@ export default function ChessResultsTable() {
   }, []);
 
   const handlePerformanceGameCountChange = useCallback((value: string) => {
-    console.log('Performance Game Count Changed:', value);
+    //console.log('Performance Game Count Changed:', value);
     setPerformanceGameCount(parseInt(value, 10));
     setStableFilteredGames(prevGames => [...prevGames]); // Trigger a re-render
   }, []);
