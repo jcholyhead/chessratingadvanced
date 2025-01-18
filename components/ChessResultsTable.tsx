@@ -19,6 +19,8 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import EventList from './EventList'
+import { OfficialRating } from './OfficialRating'
+import { LiveRating } from './LiveRating'
 
 // Helper function to sort games by date and opponent name
 const sortGames = (games: Game[]) => {
@@ -58,6 +60,7 @@ interface Game {
   opponent_name: string
   opponent_rating: number
   player_rating: number
+  increment: number
   event_name: string
   opponent_no: string
   id?: string
@@ -79,6 +82,8 @@ export default function ChessResultsTable() {
   const [stableFilteredGames, setStableFilteredGames] = useState<Game[]>([])
   const [timeRange, setTimeRange] = useState('all')
   const [groupByEvent, setGroupByEvent] = useState(true)
+  const [liveRating, setLiveRating] = useState<number | null>(null)
+  const [officialRating, setOfficialRating] = useState<number | null>(null) // Added state for official rating
 
   const renderCount = useRef(0)
 
@@ -125,7 +130,31 @@ export default function ChessResultsTable() {
 
   // Process and filter games data
   useEffect(() => {
-    if (data?.games) {
+    if (data?.games && data.games.length > 0) {
+      // Find the first non-empty player_rating
+      
+      const game0 = data.games[0];
+      const game1 = data.games[1];
+
+
+      try {
+        if (game0.game_date != game1.game_date) { 
+          setLiveRating(game0.player_rating);
+        } else {
+          if (game0.player_rating - (game1.player_rating + game0.increment) < 1) {
+            setLiveRating(game0.player_rating);
+          } else if (game1.player_rating - (game0.player_rating + game1.increment) < 1) {
+            setLiveRating(game1.player_rating);
+          }
+        }
+      } catch {
+        setLiveRating(null);
+      }
+
+
+      //const firstValidRating = data.games.find(game => game.player_rating != null && game.player_rating !== '')?.player_rating ?? null;
+      //setLiveRating(firstValidRating);
+
       const games = data.games
         .filter(game => 
           game.player_rating && 
@@ -142,6 +171,9 @@ export default function ChessResultsTable() {
       console.log('Sorted games:', sortedGames.map(g => ({ id: g.id, date: g.game_date, opponent: g.opponent_name })));
       
       setStableFilteredGames(sortedGames);
+    } else {
+      setLiveRating(null);
+      setStableFilteredGames([]);
     }
   }, [data]);
 
@@ -234,39 +266,49 @@ export default function ChessResultsTable() {
       {/* Player information and performance rating */}
       <div className="mb-4"> 
         {playerName && <h2 className="text-2xl font-bold mb-2">{playerName}</h2>}
-        <div className="flex items-center gap-4">
-          <div>
-            <label htmlFor="playerCode" className="mr-2">
-              Player Code:
-            </label>
-            <input
-              type="text"
-              id="playerCode"
-              value={playerCode}
-              onChange={handlePlayerCodeChange}
-              className="border p-1 rounded"
-            />
-            {stableFilteredGames.length > 0 && (
-              <div className="mt-2 flex items-center space-x-1 mr-2">
-                <p className="text-sm mr-2">
-                  Performance Rating:
-                </p>
-                <Select onValueChange={handlePerformanceGameCountChange} value={performanceGameCount.toString()}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select game count" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PERFORMANCE_GAME_COUNTS.map((count) => (
-                      <SelectItem key={count} value={count.toString()}>
-                        Last {count} games
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <span className="ml-2 font-semibold">{performanceRating}</span>
-              </div>
-            )}
-          </div>
+        <div className="flex flex-col space-y-2 mb-4">
+          <OfficialRating 
+            playerCode={playerCode} 
+            gameType={gameType as 'Standard' | 'Rapid' | 'Blitz'} 
+            setOfficialRating={setOfficialRating} 
+          /> {/* Updated OfficialRating component */}
+          <LiveRating 
+            rating={liveRating} 
+            gameType={gameType as 'Standard' | 'Rapid' | 'Blitz'} 
+            officialRating={officialRating} 
+          /> {/* Passed officialRating to LiveRating component */}
+        </div>
+        <div>
+          <label htmlFor="playerCode" className="mr-2">
+            Player Code:
+          </label>
+          <input
+            type="text"
+            id="playerCode"
+            value={playerCode}
+            onChange={handlePlayerCodeChange}
+            className="border p-1 rounded"
+          />
+          {stableFilteredGames.length > 0 && (
+            <div className="flex items-center space-x-1 mr-2">
+              <p className="text-sm mr-2">
+                Performance Rating:
+              </p>
+              <Select onValueChange={handlePerformanceGameCountChange} value={performanceGameCount.toString()}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select game count" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PERFORMANCE_GAME_COUNTS.map((count) => (
+                    <SelectItem key={count} value={count.toString()}>
+                      Last {count} games
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="ml-2 font-semibold">{performanceRating}</span>
+            </div>
+          )}
         </div>
       </div>
 
