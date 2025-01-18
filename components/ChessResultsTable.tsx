@@ -16,6 +16,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import EventList from './EventList'
 
 const sortGames = (games: Game[]) => {
   return [...games].sort((a, b) => {
@@ -57,6 +60,7 @@ interface Game {
   event_name: string
   opponent_no: string
   id?: string
+  event_code: string
 }
 
 const GAMES_PER_PAGE = 20
@@ -74,7 +78,8 @@ export default function ChessResultsTable() {
   const [performanceGameCount, setPerformanceGameCount] = useState(10)
   const [stableFilteredGames, setStableFilteredGames] = useState<Game[]>([])
   const [timeRange, setTimeRange] = useState('all')
-  
+  const [groupByEvent, setGroupByEvent] = useState(true) // Update here
+
   const renderCount = useRef(0)
 
   const { data, error, isLoading } = useSWR<{ games: Game[] }>(
@@ -286,63 +291,75 @@ export default function ChessResultsTable() {
                 </div>
               )}
             </div>
-            {timeFilteredGames.length > 0 ? (
+            {timeFilteredGames.length > 0 && (
               <>
                 <CommonOpponentsTable games={timeFilteredGames} gameType={type} />
-                <div className="overflow-x-auto mt-8">
-                  <table className="min-w-full bg-white border border-gray-300">
-                    <thead>
-                      <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                        <th className="py-3 px-6 text-left">Date</th>
-                        <th className="py-3 px-6 text-left">Color</th>
-                        <th className="py-3 px-6 text-left">Score</th>
-                        <th className="py-3 px-6 text-left">Opponent</th>
-                        <th className="py-3 px-6 text-left">Opponent Rating</th>
-                        <th className="py-3 px-6 text-left">Player Rating</th>
-                        <th className="py-3 px-6 text-left">Event</th>
-                      </tr>
-                    </thead>
-                    <tbody className="text-gray-600 text-sm font-light">
-                      {paginatedGames.map((game) => (
-                        <tr key={game.id} className="border-b border-gray-200 hover:bg-gray-100">
-                          <td className="py-3 px-6 text-left whitespace-nowrap">
-                            {formatDate(game.game_date)}
-                          </td>
-                          <td className="py-3 px-6 text-left">{game.colour}</td>
-                          <td className="py-3 px-6 text-left">
-                            {game.score === 5 ? '½' : game.score}
-                          </td>
-                          <td className="py-3 px-6 text-left">
-                            <Link href={`/?playerCode=${game.opponent_no}`} className="text-blue-600 hover:underline">
-                              {game.opponent_name}
-                            </Link>
-                          </td>
-                          <td className="py-3 px-6 text-left">{game.opponent_rating}</td>
-                          <td className="py-3 px-6 text-left">{game.player_rating}</td>
-                          <td className="py-3 px-6 text-left">{game.event_name}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="flex items-center space-x-2 mt-8 mb-4">
+                  <Switch
+                    id="group-by-event"
+                    checked={groupByEvent}
+                    onCheckedChange={setGroupByEvent}
+                  />
+                  <Label htmlFor="group-by-event">Group games by event</Label>
                 </div>
-                <div className="flex justify-between items-center mt-4">
-                  <Button
-                    onClick={handlePreviousPage}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </Button>
-                  <span>Page {currentPage} of {totalPages}</span>
-                  <Button
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                  </Button>
-                </div>
+                {groupByEvent ? (
+                  <EventList games={timeFilteredGames} />
+                ) : (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full bg-white border border-gray-300">
+                        <thead>
+                          <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                            <th className="py-3 px-6 text-left">Date</th>
+                            <th className="py-3 px-6 text-left">Color</th>
+                            <th className="py-3 px-6 text-left">Score</th>
+                            <th className="py-3 px-6 text-left">Opponent</th>
+                            <th className="py-3 px-6 text-left">Opponent Rating</th>
+                            <th className="py-3 px-6 text-left">Player Rating</th>
+                            <th className="py-3 px-6 text-left">Event</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-gray-600 text-sm font-light">
+                          {paginatedGames.map((game) => (
+                            <tr key={game.id} className="border-b border-gray-200 hover:bg-gray-100">
+                              <td className="py-3 px-6 text-left whitespace-nowrap">
+                                {formatDate(game.game_date)}
+                              </td>
+                              <td className="py-3 px-6 text-left">{game.colour}</td>
+                              <td className="py-3 px-6 text-left">
+                                {game.score === 5 ? '½' : game.score}
+                              </td>
+                              <td className="py-3 px-6 text-left">
+                                <Link href={`/?playerCode=${game.opponent_no}`} className="text-blue-600 hover:underline">
+                                  {game.opponent_name}
+                                </Link>
+                              </td>
+                              <td className="py-3 px-6 text-left">{game.opponent_rating}</td>
+                              <td className="py-3 px-6 text-left">{game.player_rating}</td>
+                              <td className="py-3 px-6 text-left">{game.event_name}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="flex justify-between items-center mt-4">
+                      <Button
+                        onClick={handlePreviousPage}
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </Button>
+                      <span>Page {currentPage} of {totalPages}</span>
+                      <Button
+                        onClick={handleNextPage}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </>
+                )}
               </>
-            ) : (
-              <div className="text-gray-500">-</div>
             )}
           </TabsContent>
         ))}
