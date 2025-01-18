@@ -29,7 +29,8 @@ export function OfficialRating({ playerCode, gameType, setOfficialRating }: Offi
       try {
         const response = await fetch(`/api/official-rating?playerCode=${playerCode}&gameType=${gameType}`)
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
+          setRating(null)
+          //throw new Error(`HTTP error! status: ${response.status}`)
         }
         const data = await response.json()
         if (data.success) {
@@ -37,7 +38,8 @@ export function OfficialRating({ playerCode, gameType, setOfficialRating }: Offi
           setOfficialRating(data.revised_rating)
           setIsProvisional(data.revised_category === 'P')
         } else {
-          throw new Error('Failed to fetch official rating')
+          setRating(null)
+          //throw new Error('Failed to fetch official rating')
         }
       } catch (error) {
         console.error('Error fetching official rating:', error)
