@@ -9,9 +9,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface Game {
   game_date: string
@@ -102,7 +108,23 @@ export default function EventList({ games }: EventListProps) {
                 <TableCell className="py-3 px-6 text-left whitespace-nowrap">{event.eventName}</TableCell>
                 <TableCell className="py-3 px-6 text-left">{formatDate(event.startDate)}</TableCell>
                 <TableCell className="py-3 px-6 text-left">{formatDate(event.endDate)}</TableCell>
-                <TableCell className="py-3 px-6 text-left">{event.performanceRating}</TableCell>
+                <TableCell className="py-3 px-6 text-left">
+                  <span className={event.games.length < 3 ? "text-gray-500" : ""}>
+                    {event.performanceRating}
+                  </span>
+                  {event.games.length < 3 && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="inline-block ml-1 h-4 w-4 text-gray-500" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Events with very low numbers of games can lead to unreliable performance ratings</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </TableCell>
                 <TableCell className="py-3 px-6 text-left">{event.games.length}</TableCell>
                 <TableCell className="py-3 px-6 text-left">
                   <Button
