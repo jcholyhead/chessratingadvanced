@@ -12,7 +12,7 @@ Chess Rating Analytics Dashboard is a comprehensive web application designed to 
 - **Common Opponents**: View statistics for most frequently played opponents, including win/loss/draw ratios.
 - **Event-based Analysis**: Group games by events and view performance in each event, with expandable details.
 - **Time Range Filtering**: Filter rating data and statistics based on different time ranges (3 months, 6 months, 1 year, 2 years, all-time).
-- **Responsive Design**: Optimized for both desktop and mobile viewing.
+- **Responsive Design**: Optimized for both desktop and mobile viewing. 
 
 ## Technology Stack
 
