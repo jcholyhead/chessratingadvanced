@@ -1,12 +1,12 @@
-'use client'
+"use client"
 
-import { useSearchParams } from 'next/navigation'
-import PlayerSearch from './PlayerSearch'
+import { useParams } from "next/navigation"
+import PlayerSearch from "./PlayerSearch"
 
 export default function PlayerSearchWrapper() {
-  const searchParams = useSearchParams()
-  const playerCode = searchParams.get('playerCode')
-  
-  return <PlayerSearch initialPlayerCode={playerCode} />
+  const params = useParams()
+  const playerCode = params.playerCode as string | undefined
+
+  return <PlayerSearch initialPlayerCode={playerCode || null} />
 }
 

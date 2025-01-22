@@ -29,7 +29,7 @@ export function OfficialRating({ playerCode, gameType, setOfficialRating }: Offi
       try {
         const response = await fetch(`/api/official-rating?playerCode=${playerCode}&gameType=${gameType}`)
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
+          setRating(null)
         }
         const data = await response.json()
         if (data.success) {

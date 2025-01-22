@@ -27,6 +27,10 @@ export function LiveRating({ rating, gameType, officialRating }: LiveRatingProps
     return diff > 0 ? `+${diff}` : diff
   }
 
+  if (rating === null) {
+    return null
+  }
+
   return (
     <div className="flex items-baseline">
       <span className="text-base font-medium text-gray-700 w-52 inline-flex items-baseline">

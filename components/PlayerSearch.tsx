@@ -1,51 +1,25 @@
-'use client'
+"use client"
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useMemo, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"
 
-/**
- * Represents a player in the ECF database
- */
 interface Player {
   full_name: string
   ECF_code: string
   club_name: string
 }
 
-/**
- * Props for the PlayerSearch component
- */
 interface PlayerSearchProps {
   initialPlayerCode: string | null
 }
 
-/**
- * PlayerSearch Component
- * 
- * This component provides a search functionality for ECF-rated players.
- * It includes an autocomplete feature that shows matching players as the user types.
- * 
- * @param initialPlayerCode - The initial player code to populate the search (if any)
- * 
- * @returns A search input with autocomplete functionality for finding chess players
- */
 export default function PlayerSearch({ initialPlayerCode }: PlayerSearchProps) {
   const [value, setValue] = useState("")
   const [players, setPlayers] = useState<Player[]>([])
   const router = useRouter()
 
-  /**
-   * Fetches players based on the search value
-   * @param searchValue - The string to search for in player names
-   */
   const fetchPlayers = useCallback(async (searchValue: string) => {
     if (searchValue.length >= 3) {
       try {
@@ -53,7 +27,7 @@ export default function PlayerSearch({ initialPlayerCode }: PlayerSearchProps) {
         const data = await res.json()
         setPlayers(data.players || [])
       } catch (error) {
-        console.error('Error fetching players:', error)
+        console.error("Error fetching players:", error)
         setPlayers([])
       }
     } else {
@@ -61,7 +35,6 @@ export default function PlayerSearch({ initialPlayerCode }: PlayerSearchProps) {
     }
   }, [])
 
-  // Debounce the search input to reduce API calls
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
       fetchPlayers(value)
@@ -70,19 +43,15 @@ export default function PlayerSearch({ initialPlayerCode }: PlayerSearchProps) {
     return () => clearTimeout(debounceTimer)
   }, [value, fetchPlayers])
 
-  // Reset the search when the initial player code changes
   useEffect(() => {
     setValue("")
     setPlayers([])
   }, [initialPlayerCode])
 
-  /**
-   * Sorts players by surname, then forename
-   */
   const sortedPlayers = useMemo(() => {
     return [...players].sort((a, b) => {
-      const [aSurname, aForename] = a.full_name.split(',').map(s => s.trim())
-      const [bSurname, bForename] = b.full_name.split(',').map(s => s.trim())
+      const [aSurname, aForename] = a.full_name.split(",").map((s) => s.trim())
+      const [bSurname, bForename] = b.full_name.split(",").map((s) => s.trim())
       if (aSurname === bSurname) {
         return aForename.localeCompare(bForename)
       }
@@ -90,15 +59,14 @@ export default function PlayerSearch({ initialPlayerCode }: PlayerSearchProps) {
     })
   }, [players])
 
-  /**
-   * Handles the selection of a player from the search results
-   * @param playerCode - The ECF code of the selected player
-   */
-  const handleSelect = useCallback((playerCode: string) => {
-    setValue("")
-    setPlayers([])
-    router.push(`/?playerCode=${playerCode}`)
-  }, [router])
+  const handleSelect = useCallback(
+    (playerCode: string) => {
+      setValue("")
+      setPlayers([])
+      router.push(`/player/${playerCode}`)
+    },
+    [router],
+  )
 
   return (
     <div className="relative">
@@ -115,10 +83,7 @@ export default function PlayerSearch({ initialPlayerCode }: PlayerSearchProps) {
               <CommandEmpty>No players found.</CommandEmpty>
               <CommandGroup>
                 {sortedPlayers.map((player) => (
-                  <CommandItem
-                    key={player.ECF_code}
-                    onSelect={() => handleSelect(player.ECF_code)}
-                  >
+                  <CommandItem key={player.ECF_code} onSelect={() => handleSelect(player.ECF_code)}>
                     <span>{player.full_name}</span>
                     <span className="ml-2 text-sm text-muted-foreground">({player.club_name})</span>
                   </CommandItem>

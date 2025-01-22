@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react"
-import { useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import useSWR from "swr"
 import { formatDate, calculatePerformanceRating } from "@/lib/utils"
 import PlayerRatingChart from "./PlayerRatingChart"
@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import EventList from "./EventList"
 import { OfficialRating } from "./OfficialRating"
 import { LiveRating } from "./LiveRating"
-import { BestResults } from "./BestResults" // Import BestResults component
+import { BestResults } from "./BestResults"
 
 // Helper function to sort games by date and opponent name
 const sortGames = (games: Game[]) => {
@@ -75,13 +75,15 @@ interface Game {
   event_code: string
 }
 
-export default function ChessResultsTable() {
-  // State variables
-  const searchParams = useSearchParams()
-  const [playerCode, setPlayerCode] = useState(() => {
-    const urlPlayerCode = searchParams?.get("playerCode")
-    return urlPlayerCode || PLAYER_CODES[Math.floor(Math.random() * PLAYER_CODES.length)]
-  })
+interface ChessResultsTableProps {
+  initialPlayerCode: string | null
+}
+
+export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTableProps) {
+  const router = useRouter()
+  const [playerCode, setPlayerCode] = useState(
+    initialPlayerCode || PLAYER_CODES[Math.floor(Math.random() * PLAYER_CODES.length)],
+  )
   const [gameType, setGameType] = useState("Standard")
   const [currentPage, setCurrentPage] = useState(1)
   const [playerName, setPlayerName] = useState<string | null>(null)
@@ -91,9 +93,13 @@ export default function ChessResultsTable() {
   const [timeRange, setTimeRange] = useState("all")
   const [groupByEvent, setGroupByEvent] = useState(true)
   const [liveRating, setLiveRating] = useState<number | null>(null)
-  const [officialRating, setOfficialRating] = useState<number | null>(null) // Added state for official rating
+  const [officialRating, setOfficialRating] = useState<number | null>(null)
 
   const renderCount = useRef(0)
+
+  if (!playerCode) {
+    return <div>Please enter a player code to view results.</div>
+  }
 
   // Fetch chess results data
   const { data, error, isLoading } = useSWR<{ games: Game[] }>(
@@ -101,15 +107,14 @@ export default function ChessResultsTable() {
     fetcher,
   )
 
-  // Update player code when URL changes
+  // Update player code when initialPlayerCode changes
   useEffect(() => {
-    const newPlayerCode = searchParams?.get("playerCode")
-    if (newPlayerCode && newPlayerCode !== playerCode) {
-      setPlayerCode(newPlayerCode)
+    if (initialPlayerCode && initialPlayerCode !== playerCode) {
+      setPlayerCode(initialPlayerCode)
       setCurrentPage(1)
       setColorIndices({})
     }
-  }, [searchParams, playerCode])
+  }, [initialPlayerCode])
 
   // Fetch player details
   useEffect(() => {
@@ -237,10 +242,15 @@ export default function ChessResultsTable() {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
   }, [totalPages])
 
-  const handlePlayerCodeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setPlayerCode(e.target.value)
-    setCurrentPage(1)
-  }, [])
+  const handlePlayerCodeChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newPlayerCode = e.target.value
+      setPlayerCode(newPlayerCode)
+      setCurrentPage(1)
+      router.push(`/player/${newPlayerCode}`)
+    },
+    [router],
+  )
 
   const handlePerformanceGameCountChange = useCallback((value: string) => {
     setPerformanceGameCount(Number.parseInt(value, 10))
