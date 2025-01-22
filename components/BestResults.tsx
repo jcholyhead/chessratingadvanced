@@ -46,7 +46,7 @@ export function BestResults({ games, gameType }: BestResultsProps) {
             {bestResults.map((game, index) => (
               <TableRow key={index}>
                 <TableCell>
-                  <Link href={`/?playerCode=${game.opponent_no}`} className="text-blue-600 hover:underline">
+                  <Link href={`/player/${game.opponent_no}`} className="text-blue-600 hover:underline">
                     {game.opponent_name}
                   </Link>
                 </TableCell>

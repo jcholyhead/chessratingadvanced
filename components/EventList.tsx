@@ -1,23 +1,11 @@
-import React from 'react'
-import { useState, useMemo } from 'react'
-import { formatDate, calculatePerformanceRating } from '@/lib/utils'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react'
+import React from "react"
+import { useState, useMemo } from "react"
+import { formatDate, calculatePerformanceRating } from "@/lib/utils"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { ChevronDown, ChevronUp, HelpCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import Link from 'next/link'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import Link from "next/link"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 // Define the structure of a game object
 interface Game {
@@ -56,7 +44,7 @@ export default function EventList({ games }: EventListProps) {
     const eventMap = new Map<string, Event>()
 
     // Group games by event
-    games.forEach(game => {
+    games.forEach((game) => {
       if (!eventMap.has(game.event_code)) {
         eventMap.set(game.event_code, {
           eventCode: game.event_code,
@@ -64,7 +52,7 @@ export default function EventList({ games }: EventListProps) {
           games: [],
           startDate: game.game_date,
           endDate: game.game_date,
-          performanceRating: 0
+          performanceRating: 0,
         })
       }
 
@@ -76,16 +64,16 @@ export default function EventList({ games }: EventListProps) {
 
     // Calculate performance rating for each event and sort events by end date
     return Array.from(eventMap.values())
-      .map(event => ({
+      .map((event) => ({
         ...event,
-        performanceRating: calculatePerformanceRating(event.games)
+        performanceRating: calculatePerformanceRating(event.games),
       }))
       .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())
   }, [games])
 
   // Function to toggle the expanded state of an event
   const toggleEvent = (eventCode: string) => {
-    setExpandedEvents(prev => {
+    setExpandedEvents((prev) => {
       const newSet = new Set(prev)
       if (newSet.has(eventCode)) {
         newSet.delete(eventCode)
@@ -118,9 +106,7 @@ export default function EventList({ games }: EventListProps) {
                 <TableCell className="py-3 px-6 text-left">{formatDate(event.startDate)}</TableCell>
                 <TableCell className="py-3 px-6 text-left">{formatDate(event.endDate)}</TableCell>
                 <TableCell className="py-3 px-6 text-left">
-                  <span className={event.games.length < 3 ? "text-gray-500" : ""}>
-                    {event.performanceRating}
-                  </span>
+                  <span className={event.games.length < 3 ? "text-gray-500" : ""}>{event.performanceRating}</span>
                   {/* Show tooltip for unreliable performance ratings */}
                   {event.games.length < 3 && (
                     <TooltipProvider>
@@ -137,12 +123,7 @@ export default function EventList({ games }: EventListProps) {
                 </TableCell>
                 <TableCell className="py-3 px-6 text-left">{event.games.length}</TableCell>
                 <TableCell className="py-3 px-6 text-left">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleEvent(event.eventCode)}
-                    className="p-1"
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => toggleEvent(event.eventCode)} className="p-1">
                     {expandedEvents.has(event.eventCode) ? (
                       <ChevronUp className="h-4 w-4" />
                     ) : (
@@ -171,12 +152,12 @@ export default function EventList({ games }: EventListProps) {
                           <TableRow key={index} className="border-b border-gray-200 hover:bg-gray-50">
                             <TableCell className="py-2 px-4 text-left">{formatDate(game.game_date)}</TableCell>
                             <TableCell className="py-2 px-4 text-left">
-                              <Link href={`/?playerCode=${game.opponent_no}`} className="text-blue-600 hover:underline">
+                              <Link href={`/player/${game.opponent_no}`} className="text-blue-600 hover:underline">
                                 {game.opponent_name}
                               </Link>
                             </TableCell>
                             <TableCell className="py-2 px-4 text-left">{game.colour}</TableCell>
-                            <TableCell className="py-2 px-4 text-left">{game.score === 5 ? '½' : game.score}</TableCell>
+                            <TableCell className="py-2 px-4 text-left">{game.score === 5 ? "½" : game.score}</TableCell>
                             <TableCell className="py-2 px-4 text-left">{game.opponent_rating}</TableCell>
                             <TableCell className="py-2 px-4 text-left">{game.player_rating}</TableCell>
                           </TableRow>

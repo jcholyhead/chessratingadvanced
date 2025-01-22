@@ -2,7 +2,7 @@ import { Suspense } from "react"
 import PlayerSearchWrapper from "@/components/PlayerSearchWrapper"
 import ChessResultsTable from "@/components/ChessResultsTable"
 
-export default function Home() {
+export default function PlayerPage({ params }: { params: { playerCode: string } }) {
   return (
     <div className="container mx-auto">
       <h2 className="text-xl font-semibold mb-4">Enhanced Analytics for English Chess Federation Ratings</h2>
@@ -11,8 +11,8 @@ export default function Home() {
           <PlayerSearchWrapper />
         </Suspense>
       </div>
-      <Suspense fallback={<div>Please search for a player to view their results.</div>}>
-        <ChessResultsTable initialPlayerCode={null} />
+      <Suspense fallback={<div>Loading chess results...</div>}>
+        <ChessResultsTable initialPlayerCode={params.playerCode} />
       </Suspense>
     </div>
   )

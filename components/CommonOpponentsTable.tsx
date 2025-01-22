@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import Link from 'next/link'
+import Link from "next/link"
 
 /**
  * Represents a single game in the chess results
@@ -33,28 +33,28 @@ interface OpponentStats {
 
 /**
  * CommonOpponentsTable Component
- * 
+ *
  * This component displays a table of the most common opponents a player has faced,
  * along with statistics for games played against each opponent.
- * 
+ *
  * @param games - An array of Game objects representing all games played
  * @param gameType - The type of chess game (e.g., 'Standard', 'Rapid', 'Blitz')
- * 
+ *
  * @returns A table displaying the top 10 most common opponents and their statistics
  */
 export default function CommonOpponentsTable({ games, gameType }: CommonOpponentsTableProps) {
   // Calculate opponent statistics
   const opponentStats = useMemo(() => {
     const stats: { [key: string]: OpponentStats } = {}
-    games.forEach(game => {
+    games.forEach((game) => {
       if (!stats[game.opponent_name]) {
-        stats[game.opponent_name] = { 
-          name: game.opponent_name, 
-          opponent_no: game.opponent_no, 
-          totalGames: 0, 
-          wins: 0, 
-          losses: 0, 
-          draws: 0 
+        stats[game.opponent_name] = {
+          name: game.opponent_name,
+          opponent_no: game.opponent_no,
+          totalGames: 0,
+          wins: 0,
+          losses: 0,
+          draws: 0,
         }
       }
       stats[game.opponent_name].totalGames++
@@ -88,7 +88,7 @@ export default function CommonOpponentsTable({ games, gameType }: CommonOpponent
             {opponentStats.map((opponent, index) => (
               <tr key={index} className="border-t">
                 <td className="py-2">
-                  <Link href={`/?playerCode=${opponent.opponent_no}`} className="text-blue-600 hover:underline">
+                  <Link href={`/player/${opponent.opponent_no}`} className="text-blue-600 hover:underline">
                     {opponent.name}
                   </Link>
                 </td>
