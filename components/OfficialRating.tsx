@@ -37,7 +37,7 @@ export function OfficialRating({ playerCode, gameType, setOfficialRating }: Offi
           setOfficialRating(data.revised_rating)
           setIsProvisional(data.revised_category === 'P')
         } else {
-          throw new Error('Failed to fetch official rating')
+          setRating(null)
         }
       } catch (error) {
         console.error('Error fetching official rating:', error)
