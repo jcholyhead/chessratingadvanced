@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     
     // Add Cache-Control header
     const headers = new Headers()
-    headers.set('Cache-Control', 'public, s-maxage=64800, stale-while-revalidate=600') // 18 hour cache, 10 minutes stale-while-revalidate
+    headers.set('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=60') // 18 hour cache, 10 minutes stale-while-revalidate
 
     return NextResponse.json(data, { headers })
   } catch (error) {
