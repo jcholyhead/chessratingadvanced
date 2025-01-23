@@ -25,7 +25,11 @@ export async function GET(request: NextRequest) {
       console.log(`Total processing time today: ${data.total_processing_time_today}`)
     }
     
-    return NextResponse.json(data)
+    // Add Cache-Control header
+    const headers = new Headers()
+    headers.set('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=60') // 18 hour cache, 10 minutes stale-while-revalidate
+    headers.set('Netlify-Vary', 'query')
+    return NextResponse.json(data, { headers })
   } catch (error) {
     console.error('Error fetching chess results:', error)
     return NextResponse.json({ error: 'Failed to fetch chess results' }, { status: 500 })

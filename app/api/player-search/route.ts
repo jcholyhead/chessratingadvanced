@@ -18,7 +18,13 @@ export async function GET(request: NextRequest) {
   try {
     const response = await fetch(apiUrl)
     const data = await response.json()
-    return NextResponse.json(data)
+    // Add Cache-Control header
+    const headers = new Headers()
+    headers.set('Cache-Control', 'public, s-maxage=400800, stale-while-revalidate=600') // 18 hour cache, 10 minutes stale-while-revalidate
+    headers.set('Netlify-Vary', 'query')
+
+
+    return NextResponse.json(data, { headers })
   } catch (error) {
     console.error('Error fetching player search results:', error)
     return NextResponse.json({ error: 'Failed to fetch player search results' }, { status: 500 })
