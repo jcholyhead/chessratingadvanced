@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     // Add Cache-Control header
     const headers = new Headers()
     headers.set('Cache-Control', 'public, s-maxage=64800, stale-while-revalidate=600') // 18 hour cache, 10 minutes stale-while-revalidate
-
+    headers.set('Netlify-Vary', 'query')
     return NextResponse.json(data, { headers })
   } catch (error) {
     console.error('Error fetching official rating:', error)
