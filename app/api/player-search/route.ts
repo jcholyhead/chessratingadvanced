@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const data = await response.json()
     // Add Cache-Control header
     const headers = new Headers()
-    headers.set('Cache-Control', 'public, s-maxage=200800, stale-while-revalidate=600') // 18 hour cache, 10 minutes stale-while-revalidate
+    headers.set('Cache-Control', 'public, s-maxage=400800, stale-while-revalidate=600') // 18 hour cache, 10 minutes stale-while-revalidate
     headers.set('Netlify-Vary', 'query')
 
 
