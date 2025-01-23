@@ -1,0 +1,1 @@
+/api/*   Cache-Control: public, s-maxage=64800, stale-while-revalidate=600
