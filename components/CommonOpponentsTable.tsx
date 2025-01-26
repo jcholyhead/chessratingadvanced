@@ -16,6 +16,7 @@ interface Game {
   score: number
   opponent_rating: number
   player_rating: number
+  event_name: string
 }
 
 /**
@@ -151,6 +152,7 @@ export default function CommonOpponentsTable({ games, gameType }: CommonOpponent
                             <TableHead>Result</TableHead>
                             <TableHead>Player Rating</TableHead>
                             <TableHead>Opponent Rating</TableHead>
+                            <TableHead>Event</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -160,6 +162,7 @@ export default function CommonOpponentsTable({ games, gameType }: CommonOpponent
                               <TableCell>{game.score === 1 ? "Win" : game.score === 0 ? "Loss" : "Draw"}</TableCell>
                               <TableCell>{game.player_rating || "N/A"}</TableCell>
                               <TableCell>{game.opponent_rating || "N/A"}</TableCell>
+                              <TableCell>{game.event_name || "N/A"}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
