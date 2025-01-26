@@ -50,6 +50,7 @@ const PRESET_COLORS = ["#E76E50", "#E76E50", "#E76E50", "#E76E50", "#E76E50"]
 const PERFORMANCE_GAME_COUNTS = [5, 10, 15, 20, 25, 30, 40, 50]
 const TIME_RANGES = [
   { label: "All-time", value: "all" },
+  { label: "5y", value: "5y" },
   { label: "2y", value: "2y" },
   { label: "1y", value: "1y" },
   { label: "6m", value: "6m" },
