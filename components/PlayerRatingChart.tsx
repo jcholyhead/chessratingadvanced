@@ -44,8 +44,10 @@ export default function PlayerRatingChart({ games, gameType, colorIndex }: Playe
    * Processes the games data for the chart
    * Sorts games by date and formats the data for the Recharts component
    */
+
+  const filteredGames = games.filter((game) => game.player_rating)
   const chartData = useMemo(() => {
-    return games
+    return filteredGames
       .sort((a, b) => new Date(a.game_date).getTime() - new Date(b.game_date).getTime())
       .map(game => ({
         date: new Date(game.game_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' }),
@@ -54,8 +56,8 @@ export default function PlayerRatingChart({ games, gameType, colorIndex }: Playe
   }, [games])
 
   // Calculate the minimum and maximum ratings for the Y-axis domain
-  const minRating = Math.min(...games.map(game => game.player_rating))
-  const maxRating = Math.max(...games.map(game => game.player_rating))
+  const minRating = Math.min(...filteredGames.map(game => game.player_rating))
+  const maxRating = Math.max(...filteredGames.map(game => game.player_rating))
 
   // Select the chart color based on the provided index
   const chartColor = PRESET_COLORS[colorIndex]
