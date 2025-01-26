@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Player code is required' }, { status: 400 })
   }
 
-  const apiUrl = `https://rating.englishchess.org.uk/v2/new/api.php?v2/games/${gameType}/player/${playerCode}`
+  const apiUrl = `https://rating.englishchess.org.uk/v2/new/api.php?v2/games/${gameType}/player/${playerCode}/limit/2000`
 
   try {
     const response = await fetch(apiUrl)
