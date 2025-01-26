@@ -2,7 +2,7 @@ import React from "react"
 import { useState, useMemo } from "react"
 import { formatDate, calculatePerformanceRating } from "@/lib/utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ChevronDown, ChevronUp, HelpCircle } from "lucide-react"
+import { ChevronDown, ChevronUp, HelpCircle, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -35,9 +35,11 @@ interface Event {
   performanceRating: number
 }
 
+const EVENTS_PER_PAGE = 20
+
 export default function EventList({ games }: EventListProps) {
-  // State to keep track of which events are expanded
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set())
+  const [currentPage, setCurrentPage] = useState(1)
 
   // Memoized calculation of events from games
   const events = useMemo(() => {
@@ -71,6 +73,14 @@ export default function EventList({ games }: EventListProps) {
       .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())
   }, [games])
 
+  const totalPages = Math.ceil(events.length / EVENTS_PER_PAGE)
+
+  const paginatedEvents = useMemo(() => {
+    const startIndex = (currentPage - 1) * EVENTS_PER_PAGE
+    const endIndex = startIndex + EVENTS_PER_PAGE
+    return events.slice(startIndex, endIndex)
+  }, [events, currentPage])
+
   // Function to toggle the expanded state of an event
   const toggleEvent = (eventCode: string) => {
     setExpandedEvents((prev) => {
@@ -84,93 +94,116 @@ export default function EventList({ games }: EventListProps) {
     })
   }
 
+  const goToNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+  }
+
+  const goToPreviousPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1))
+  }
+
   return (
-    <div className="overflow-x-auto">
-      <Table className="min-w-full bg-white border border-gray-300">
-        <TableHeader>
-          <TableRow className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-            <TableHead className="py-3 px-6 text-left">Event Name</TableHead>
-            <TableHead className="py-3 px-6 text-left">Start Date</TableHead>
-            <TableHead className="py-3 px-6 text-left">End Date</TableHead>
-            <TableHead className="py-3 px-6 text-left">Performance Rating</TableHead>
-            <TableHead className="py-3 px-6 text-left">Games</TableHead>
-            <TableHead className="py-3 px-6 text-left"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {events.map((event) => (
-            <React.Fragment key={event.eventCode}>
-              {/* Event row */}
-              <TableRow className="border-b border-gray-200 hover:bg-gray-100">
-                <TableCell className="py-3 px-6 text-left whitespace-nowrap">{event.eventName}</TableCell>
-                <TableCell className="py-3 px-6 text-left">{formatDate(event.startDate)}</TableCell>
-                <TableCell className="py-3 px-6 text-left">{formatDate(event.endDate)}</TableCell>
-                <TableCell className="py-3 px-6 text-left">
-                  <span className={event.games.length < 3 ? "text-gray-500" : ""}>{event.performanceRating}</span>
-                  {/* Show tooltip for unreliable performance ratings */}
-                  {event.games.length < 3 && (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HelpCircle className="inline-block ml-1 h-4 w-4 text-gray-500" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Events with very low numbers of games can lead to unreliable performance ratings</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
-                </TableCell>
-                <TableCell className="py-3 px-6 text-left">{event.games.length}</TableCell>
-                <TableCell className="py-3 px-6 text-left">
-                  <Button variant="ghost" size="sm" onClick={() => toggleEvent(event.eventCode)} className="p-1">
-                    {expandedEvents.has(event.eventCode) ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
+    <div className="space-y-4">
+      <div className="overflow-x-auto">
+        <Table className="min-w-full bg-white border border-gray-300">
+          <TableHeader>
+            <TableRow className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+              <TableHead className="py-3 px-6 text-left">Event Name</TableHead>
+              <TableHead className="py-3 px-6 text-left">Start Date</TableHead>
+              <TableHead className="py-3 px-6 text-left">End Date</TableHead>
+              <TableHead className="py-3 px-6 text-left">Performance Rating</TableHead>
+              <TableHead className="py-3 px-6 text-left">Games</TableHead>
+              <TableHead className="py-3 px-6 text-left"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedEvents.map((event) => (
+              <React.Fragment key={event.eventCode}>
+                {/* Event row */}
+                <TableRow className="border-b border-gray-200 hover:bg-gray-100">
+                  <TableCell className="py-3 px-6 text-left whitespace-nowrap">{event.eventName}</TableCell>
+                  <TableCell className="py-3 px-6 text-left">{formatDate(event.startDate)}</TableCell>
+                  <TableCell className="py-3 px-6 text-left">{formatDate(event.endDate)}</TableCell>
+                  <TableCell className="py-3 px-6 text-left">
+                    <span className={event.games.length < 3 ? "text-gray-500" : ""}>{event.performanceRating || "Unavailable"}</span>
+                    {/* Show tooltip for unreliable performance ratings */}
+                    {event.games.length < 3 && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className="inline-block ml-1 h-4 w-4 text-gray-500" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Events with very low numbers of games can lead to unreliable performance ratings</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
-                  </Button>
-                </TableCell>
-              </TableRow>
-              {/* Expanded game details */}
-              {expandedEvents.has(event.eventCode) && (
-                <TableRow>
-                  <TableCell colSpan={6} className="p-0">
-                    <Table className="w-full">
-                      <TableHeader>
-                        <TableRow className="bg-gray-100 text-gray-600 text-sm leading-normal">
-                          <TableHead className="py-2 px-4 text-left">Date</TableHead>
-                          <TableHead className="py-2 px-4 text-left">Opponent</TableHead>
-                          <TableHead className="py-2 px-4 text-left">Color</TableHead>
-                          <TableHead className="py-2 px-4 text-left">Score</TableHead>
-                          <TableHead className="py-2 px-4 text-left">Opponent Rating</TableHead>
-                          <TableHead className="py-2 px-4 text-left">Player Rating</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {event.games.map((game, index) => (
-                          <TableRow key={index} className="border-b border-gray-200 hover:bg-gray-50">
-                            <TableCell className="py-2 px-4 text-left">{formatDate(game.game_date)}</TableCell>
-                            <TableCell className="py-2 px-4 text-left">
-                              <Link href={`/player/${game.opponent_no}`} className="text-blue-600 hover:underline">
-                                {game.opponent_name}
-                              </Link>
-                            </TableCell>
-                            <TableCell className="py-2 px-4 text-left">{game.colour}</TableCell>
-                            <TableCell className="py-2 px-4 text-left">{game.score === 5 ? "½" : game.score}</TableCell>
-                            <TableCell className="py-2 px-4 text-left">{game.opponent_rating}</TableCell>
-                            <TableCell className="py-2 px-4 text-left">{game.player_rating}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                  </TableCell>
+                  <TableCell className="py-3 px-6 text-left">{event.games.length}</TableCell>
+                  <TableCell className="py-3 px-6 text-left">
+                    <Button variant="ghost" size="sm" onClick={() => toggleEvent(event.eventCode)} className="p-1">
+                      {expandedEvents.has(event.eventCode) ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </Button>
                   </TableCell>
                 </TableRow>
-              )}
-            </React.Fragment>
-          ))}
-        </TableBody>
-      </Table>
+                {/* Expanded game details */}
+                {expandedEvents.has(event.eventCode) && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="p-0">
+                      <Table className="w-full">
+                        <TableHeader>
+                          <TableRow className="bg-gray-100 text-gray-600 text-sm leading-normal">
+                            <TableHead className="py-2 px-4 text-left">Date</TableHead>
+                            <TableHead className="py-2 px-4 text-left">Opponent</TableHead>
+                            <TableHead className="py-2 px-4 text-left">Color</TableHead>
+                            <TableHead className="py-2 px-4 text-left">Score</TableHead>
+                            <TableHead className="py-2 px-4 text-left">Opponent Rating</TableHead>
+                            <TableHead className="py-2 px-4 text-left">Player Rating</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {event.games.map((game, index) => (
+                            <TableRow key={index} className="border-b border-gray-200 hover:bg-gray-50">
+                              <TableCell className="py-2 px-4 text-left">{formatDate(game.game_date)}</TableCell>
+                              <TableCell className="py-2 px-4 text-left">
+                                <Link href={`/player/${game.opponent_no}`} className="text-blue-600 hover:underline">
+                                  {game.opponent_name}
+                                </Link>
+                              </TableCell>
+                              <TableCell className="py-2 px-4 text-left">{game.colour}</TableCell>
+                              <TableCell className="py-2 px-4 text-left">
+                                {game.score === 5 ? "½" : game.score}
+                              </TableCell>
+                              <TableCell className="py-2 px-4 text-left">{game.opponent_rating}</TableCell>
+                              <TableCell className="py-2 px-4 text-left">{game.player_rating}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </React.Fragment>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="flex justify-between items-center mt-4">
+        <Button onClick={goToPreviousPage} disabled={currentPage === 1}>
+          <ChevronLeft className="mr-2 h-4 w-4" /> Previous
+        </Button>
+        <span>
+          Page {currentPage} of {totalPages}
+        </span>
+        <Button onClick={goToNextPage} disabled={currentPage === totalPages}>
+          Next <ChevronRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
     </div>
   )
 }

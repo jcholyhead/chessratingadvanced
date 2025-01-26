@@ -50,6 +50,7 @@ const PRESET_COLORS = ["#E76E50", "#E76E50", "#E76E50", "#E76E50", "#E76E50"]
 const PERFORMANCE_GAME_COUNTS = [5, 10, 15, 20, 25, 30, 40, 50]
 const TIME_RANGES = [
   { label: "All-time", value: "all" },
+  { label: "5y", value: "5y" },
   { label: "2y", value: "2y" },
   { label: "1y", value: "1y" },
   { label: "6m", value: "6m" },
@@ -149,7 +150,7 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
       const games = data.games
         .filter(
           (game) =>
-            game.player_rating && game.opponent_name && (game.score === 0 || game.score === 1 || game.score === 5),
+            game.opponent_name && (game.score === 0 || game.score === 1 || game.score === 5),
         )
         .map((game, index) => ({
           ...game,
@@ -193,6 +194,9 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
     const now = new Date()
     const filterDate = new Date()
     switch (timeRange) {
+      case "5y":
+        filterDate.setFullYear(now.getFullYear() - 5)
+        break
       case "2y":
         filterDate.setFullYear(now.getFullYear() - 2)
         break
