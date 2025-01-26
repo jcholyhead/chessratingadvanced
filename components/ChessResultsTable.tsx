@@ -193,6 +193,9 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
     const now = new Date()
     const filterDate = new Date()
     switch (timeRange) {
+      case "5y":
+        filterDate.setFullYear(now.getFullYear() - 5)
+        break
       case "2y":
         filterDate.setFullYear(now.getFullYear() - 2)
         break
