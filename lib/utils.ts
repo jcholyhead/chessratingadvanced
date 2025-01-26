@@ -48,16 +48,16 @@ export function formatDate(dateString: string): string {
  */
 export function calculatePerformanceRating(games: { opponent_rating: number; score: number }[]): number {
   //console.log('Calculating Performance Rating for games:', games);
-
-  const gameCount = games.length;
+  const filteredGames = games.filter((game) => game.opponent_rating)
+  const gameCount = filteredGames.length;
   if (gameCount === 0) return 0;
 
   // Calculate average opponent rating
-  const rc = games.reduce((sum, game) => sum + game.opponent_rating, 0) / gameCount;
+  const rc = filteredGames.reduce((sum, game) => sum + game.opponent_rating, 0) / gameCount;
   //console.log('Average opponent rating (rc):', rc);
 
   // Calculate total score (0.5 for draws)
-  const totalScore = games.reduce((sum, game) => sum + (game.score === 5 ? 0.5 : game.score), 0);
+  const totalScore = filteredGames.reduce((sum, game) => sum + (game.score === 5 ? 0.5 : game.score), 0);
   //console.log('Total score:', totalScore);
 
   // Calculate performance (percentage score)
