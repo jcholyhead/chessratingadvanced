@@ -149,7 +149,7 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
       const games = data.games
         .filter(
           (game) =>
-            game.player_rating && game.opponent_name && (game.score === 0 || game.score === 1 || game.score === 5),
+            game.opponent_name && (game.score === 0 || game.score === 1 || game.score === 5),
         )
         .map((game, index) => ({
           ...game,
