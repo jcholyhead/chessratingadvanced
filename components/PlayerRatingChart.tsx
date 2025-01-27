@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useState, useMemo,useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
@@ -25,6 +25,7 @@ interface PlayerRatingChartProps {
   games: Game[]
   gameType: string
   colorIndex: number
+  currentRating: number
 }
 
 /**
@@ -36,24 +37,33 @@ interface PlayerRatingChartProps {
  * @param games - An array of Game objects representing the player's game history
  * @param gameType - The type of chess game (e.g., 'Standard', 'Rapid', 'Blitz')
  * @param colorIndex - Index to select a color from the PRESET_COLORS array
+ * @param currentRating - The current Rating of the player, used to ensure consistency on most recent date where data might
  * 
  * @returns A card containing a line chart of the player's rating over time
  */
-export default function PlayerRatingChart({ games, gameType, colorIndex }: PlayerRatingChartProps) {
+export default function PlayerRatingChart({ games, gameType, colorIndex, currentRating }: PlayerRatingChartProps) {
   /**
    * Processes the games data for the chart
    * Sorts games by date and formats the data for the Recharts component
    */
 
+  const [chartData, setChartData] = useState<{ date: string; rating: number }[]>([]);
+
   const filteredGames = games.filter((game) => game.player_rating)
-  const chartData = useMemo(() => {
-    return filteredGames
+  useEffect(() => {
+    setChartData(filteredGames
       .sort((a, b) => new Date(a.game_date).getTime() - new Date(b.game_date).getTime())
       .map(game => ({
         date: new Date(game.game_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' }),
         rating: game.player_rating
-      }))
+      })))
   }, [games])
+
+    useEffect(() => {
+      if (chartData.length > 0) {
+        chartData[chartData.length - 1].rating = currentRating; // Set your desired value here
+      }
+    }, [currentRating])
 
   // Calculate the minimum and maximum ratings for the Y-axis domain
   const minRating = Math.min(...filteredGames.map(game => game.player_rating))
