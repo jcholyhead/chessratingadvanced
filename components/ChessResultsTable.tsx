@@ -23,7 +23,7 @@ const sortGames = (games: Game[]) => {
   return [...games].sort((a, b) => {
     const dateA = new Date(a.game_date).getTime()
     const dateB = new Date(b.game_date).getTime()
-    return dateB - dateA || a.opponent_name.localeCompare(b.opponent_name)
+    return dateB - dateA 
   })
 }
 
@@ -365,7 +365,7 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
                   </Tabs>
                 </div>
                 {timeFilteredGames.length > 0 ? (
-                  <PlayerRatingChart games={timeFilteredGames} gameType={type} colorIndex={colorIndices[type] || 0} />
+                  <PlayerRatingChart games={timeFilteredGames} gameType={type} colorIndex={colorIndices[type] || 0} currentRating={liveRating ?? officialRating ?? 0} />
                 ) : (
                   <div className="text-gray-500 h-[400px] flex items-center justify-center">
                     No games found for the selected time range.
