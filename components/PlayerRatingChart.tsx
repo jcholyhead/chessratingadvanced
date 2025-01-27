@@ -59,7 +59,6 @@ export default function PlayerRatingChart({ games, gameType, colorIndex, current
       })))
   }, [games])
 
-  // Set color indices for charts
     useEffect(() => {
       if (chartData.length > 0) {
         chartData[chartData.length - 1].rating = currentRating; // Set your desired value here
