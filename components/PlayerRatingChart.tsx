@@ -51,19 +51,41 @@ export default function PlayerRatingChart({ games, gameType, colorIndex, current
 
   const filteredGames = games.filter((game) => game.player_rating)
   useEffect(() => {
-    setChartData(filteredGames
-      .sort((a, b) => new Date(a.game_date).getTime() - new Date(b.game_date).getTime())
-      .map(game => ({
-        date: new Date(game.game_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' }),
-        rating: game.player_rating
-      })))
-  }, [games])
+    const filteredGames = games.filter((game) => game.player_rating);
+  
+    const uniqueGames = Array.from(
+      filteredGames
+        .reduce((map, game) => {
+          const dateKey = new Date(game.game_date).toLocaleDateString('en-GB');
+          // Always overwrite the game for the same date, keeping the last one
+          map.set(dateKey, game);
+          return map;
+        }, new Map())
+        .values() // Get only the unique games
+    );
+  
+    setChartData(
+      uniqueGames
+        .sort((a, b) => new Date(a.game_date).getTime() - new Date(b.game_date).getTime())
+        .map((game) => ({
+          date: new Date(game.game_date).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: '2-digit',
+          }),
+          rating: game.player_rating,
+        }))
+    );
+  }, [games]);
 
     useEffect(() => {
       if (chartData.length > 0) {
-        chartData[chartData.length - 1].rating = currentRating; // Set your desired value here
+        const updatedChartData = chartData
+        updatedChartData[updatedChartData.length - 1].rating = currentRating; // Set your desired value here
+
+        setChartData(updatedChartData)
       }
-    }, [currentRating])
+    }, [games, currentRating])
 
   // Calculate the minimum and maximum ratings for the Y-axis domain
   const minRating = Math.min(...filteredGames.map(game => game.player_rating))
