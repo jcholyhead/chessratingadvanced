@@ -5,15 +5,7 @@ import ChessResultsTable from "@/components/ChessResultsTable"
 export default function Home() {
   return (
     <div className="container mx-auto">
-      <h2 className="text-xl font-semibold mb-4">Enhanced Analytics for English Chess Federation Ratings</h2>
-      <div className="mb-4">
-        <Suspense fallback={<div>Loading player search...</div>}>
-          <PlayerSearchWrapper />
-        </Suspense>
-      </div>
-      <Suspense fallback={<div>Please search for a player to view their results.</div>}>
-        <ChessResultsTable initialPlayerCode={null} />
-      </Suspense>
+      <h1>Under Maintenance Back Really Soon!</h1>
     </div>
   )
 }
