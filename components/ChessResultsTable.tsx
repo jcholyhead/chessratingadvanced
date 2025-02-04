@@ -97,7 +97,7 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
   const [officialRating, setOfficialRating] = useState<number | null>(null)
 
   const renderCount = useRef(0)
-  return (<h1>Under Maintenance</h1>)
+  
   if (!playerCode) {
     return <div>Please enter a player code to view results.</div>
   }
