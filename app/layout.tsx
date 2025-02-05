@@ -18,7 +18,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head><title>Under maintenance<Script defer src="https://cloud.umami.is/script.js" data-website-id="4d71ba17-f234-45d6-b415-a1ace9193a87" /></title></head><body><h1>Under maintenance, we'll be back with you soon</h1></body>
+      <head><Script defer src="https://cloud.umami.is/script.js" data-website-id="4d71ba17-f234-45d6-b415-a1ace9193a87" /><title>Under maintenance</title></head><body><h1>Under maintenance, we'll be back with you soon</h1></body>
       {/* <head>
         <Script defer src="https://cloud.umami.is/script.js" data-website-id="4d71ba17-f234-45d6-b415-a1ace9193a87" />
         <Script
