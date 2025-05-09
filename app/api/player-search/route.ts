@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Name must be at least 3 characters long' }, { status: 400 })
   }
 
-  const apiUrl = `https://www.ecfrating.org.uk/v2/new/api.php?v2/players/name/${name}`
+  const apiUrl = `https://rating.englishchess.org.uk//v2/new/api.php?v2/players/name/${name}`
 
   try {
     const response = await fetch(apiUrl)
