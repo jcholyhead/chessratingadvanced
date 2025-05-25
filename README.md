@@ -4,6 +4,16 @@
 
 Chess Rating Analytics Dashboard is a comprehensive web application designed to provide enhanced analytics and visualizations for English Chess Federation (ECF) rating data. This project allows chess players, coaches, and enthusiasts to gain deeper insights into rating performance and trends.
 
+## 📚 Documentation
+
+For comprehensive documentation including user guides, developer information, API references, and deployment guides, see our **[Complete Documentation](docs/README.md)**.
+
+**Quick Links:**
+- **New Users**: [User Guide](docs/user-guide/getting-started.md)
+- **Developers**: [Developer Setup](docs/developer-guide/getting-started.md)
+- **API Reference**: [API Documentation](docs/api/)
+- **Deployment**: [Deployment Guides](docs/deployment/)
+
 ## Features
 
 - **Player Search**: Easily search for any ECF-rated player using their name or ECF code.
