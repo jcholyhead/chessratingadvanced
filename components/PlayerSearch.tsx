@@ -8,7 +8,11 @@ import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@
 interface Player {
   full_name: string
   ECF_code: string
-  club_name: string
+  club_name?: string
+  clubs?: Array<{
+    club_code: string
+    club_name: string
+  }>
 }
 
 interface PlayerSearchProps {
@@ -82,12 +86,20 @@ export default function PlayerSearch({ initialPlayerCode }: PlayerSearchProps) {
             <CommandList>
               <CommandEmpty>No players found.</CommandEmpty>
               <CommandGroup>
-                {sortedPlayers.map((player) => (
-                  <CommandItem key={player.ECF_code} onSelect={() => handleSelect(player.ECF_code)}>
-                    <span>{player.full_name}</span>
-                    <span className="ml-2 text-sm text-muted-foreground">({player.club_name})</span>
-                  </CommandItem>
-                ))}
+                {sortedPlayers.map((player) => {
+                  // Get club name - use club_name if available, otherwise use first club from clubs array
+                  const clubName = player.club_name || 
+                    (player.clubs && player.clubs.length > 0 ? player.clubs[0].club_name : '')
+                  
+                  return (
+                    <CommandItem key={player.ECF_code} onSelect={() => handleSelect(player.ECF_code)}>
+                      <span>{player.full_name}</span>
+                      {clubName && (
+                        <span className="ml-2 text-sm text-muted-foreground">({clubName})</span>
+                      )}
+                    </CommandItem>
+                  )
+                })}
               </CommandGroup>
             </CommandList>
           </Command>
