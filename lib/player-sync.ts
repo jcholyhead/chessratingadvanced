@@ -386,11 +386,24 @@ export class PlayerSyncService {
 
   /**
    * Main sync function - check if player needs sync and perform if necessary
+   * Handles both full ECF codes (e.g., "304459C") and numeric-only codes (e.g., "304459")
    */
   async syncPlayerIfNeeded(playerId: string): Promise<boolean> {
     try {
       const collection = await getPlayersCollection()
-      const player = await collection.findOne({ ECF_code: playerId })
+      let player = await collection.findOne({ ECF_code: playerId })
+      
+      // If not found and the ID is numeric only, try to find by prefix match
+      if (!player && /^[0-9]+$/.test(playerId)) {
+        player = await collection.findOne({ 
+          ECF_code: { $regex: `^${playerId}[A-Z]$`, $options: 'i' } 
+        })
+        
+        if (player) {
+          console.log(`Resolved numeric code ${playerId} to full ECF code ${player.ECF_code}`)
+          playerId = player.ECF_code // Use the full code for the rest of the sync
+        }
+      }
 
       if (!player) {
         console.log(`Player ${playerId} not found in MongoDB - skipping sync`)

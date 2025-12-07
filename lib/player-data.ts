@@ -8,20 +8,49 @@ export class PlayerDataService {
   
   /**
    * Get player data from MongoDB with synchronous sync
+   * Handles both full ECF codes (e.g., "304459C") and numeric-only codes (e.g., "304459")
    */
   async getPlayerData(playerId: string, performSync: boolean = true): Promise<PlayerDocument | null> {
     try {
       const collection = await getPlayersCollection()
       
-      // If sync is requested, perform it synchronously before getting data
-      if (performSync) {
+      // First, try to find the player - handle numeric-only codes
+      let player = await collection.findOne({ ECF_code: playerId })
+      
+      // If not found and the ID is numeric only, try to find by prefix match
+      if (!player && /^[0-9]+$/.test(playerId)) {
+        // Look for ECF code that starts with the numeric part followed by a letter
+        player = await collection.findOne({ 
+          ECF_code: { $regex: `^${playerId}[A-Z]$`, $options: 'i' } 
+        })
+        
+        if (player) {
+          console.log(`Resolved numeric code ${playerId} to full ECF code ${player.ECF_code}`)
+          playerId = player.ECF_code // Use the full code for sync
+        }
+      }
+      
+      // If sync is requested and we found or will create the player, perform sync
+      if (performSync && (player || /^[0-9]+[A-Z]?$/i.test(playerId))) {
         console.log(`Performing synchronous sync for player ${playerId}`)
         const syncPerformed = await playerSyncService.syncPlayerIfNeeded(playerId)
         console.log(`Sync result for ${playerId}: ${syncPerformed ? 'Updated' : 'No new games'}`)
+        
+        // Re-fetch player data after sync (in case it was created)
+        if (!player) {
+          player = await collection.findOne({ ECF_code: playerId })
+          // Also check for newly created player with the numeric prefix
+          if (!player && /^[0-9]+$/.test(playerId)) {
+            player = await collection.findOne({ 
+              ECF_code: { $regex: `^${playerId}[A-Z]$`, $options: 'i' } 
+            })
+          }
+        } else {
+          // Refresh the data after sync
+          player = await collection.findOne({ ECF_code: player.ECF_code })
+        }
       }
       
-      // Get the updated player data after sync
-      const player = await collection.findOne({ ECF_code: playerId })
       return player
     } catch (error) {
       console.error(`Failed to get player data for ${playerId}:`, error)

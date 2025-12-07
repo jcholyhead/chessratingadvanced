@@ -112,6 +112,16 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
 
 
   const renderCount = useRef(0)
+  const hasScrolledRef = useRef(false)
+  
+  // Scroll to top on initial mount with a player code from URL
+  useEffect(() => {
+    if (initialPlayerCode && !hasScrolledRef.current) {
+      window.scrollTo({ top: 0, behavior: 'instant' })
+      hasScrolledRef.current = true
+    }
+  }, [])
+  
   if (!playerCode) {
     return <div>Please enter a player code to view results.</div>
   }
@@ -128,6 +138,8 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
       setPlayerCode(initialPlayerCode)
       setCurrentPage(1)
       setColorIndices({})
+      // Scroll to top when navigating to a new player
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }, [initialPlayerCode])
 
