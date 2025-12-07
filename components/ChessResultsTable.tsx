@@ -459,7 +459,61 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
                     <EventList games={timeFilteredGames} />
                   ) : (
                     <>
-                      <div className="overflow-x-auto rounded-xl border bg-card">
+                      {/* Mobile card layout */}
+                      <div className="md:hidden space-y-3">
+                        {paginatedGames.map((game) => (
+                          <div 
+                            key={game.id} 
+                            className="rounded-xl border bg-card p-4 card-hover"
+                          >
+                            <div className="flex items-start justify-between gap-3 mb-3">
+                              <div className="flex-1 min-w-0">
+                                <Link
+                                  href={`/?playerCode=${game.opponent_no}`}
+                                  className="link-primary font-medium text-base block truncate"
+                                >
+                                  {game.opponent_name}
+                                </Link>
+                                <p className="text-sm text-muted-foreground truncate mt-0.5">
+                                  {game.event_name}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                                  game.colour.toUpperCase() === 'W' 
+                                    ? 'bg-white border-2 border-foreground/20 text-foreground' 
+                                    : 'bg-foreground text-background'
+                                }`}>
+                                  {game.colour.toUpperCase()}
+                                </span>
+                                <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold ${
+                                  game.score === 1 ? 'bg-green-100 text-green-700' :
+                                  game.score === 0 ? 'bg-red-100 text-red-700' :
+                                  'bg-amber-100 text-amber-700'
+                                }`}>
+                                  {game.score === 5 ? "½" : game.score}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="font-mono-display text-muted-foreground">
+                                {formatDate(game.game_date)}
+                              </span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-muted-foreground">
+                                  vs <span className="font-mono-display">{game.opponent_rating || '—'}</span>
+                                </span>
+                                <span className="font-mono-display font-semibold text-primary">
+                                  {game.player_rating || '—'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Desktop table layout */}
+                      <div className="hidden md:block overflow-x-auto rounded-xl border bg-card">
                         <table className="min-w-full">
                           <thead>
                             <tr className="border-b bg-secondary/50">
@@ -510,22 +564,29 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
                           </tbody>
                         </table>
                       </div>
+
+                      {/* Pagination */}
                       <div className="flex justify-between items-center mt-6">
                         <Button 
                           onClick={handlePreviousPage} 
                           disabled={currentPage === 1}
                           variant="outline"
+                          size="sm"
                           className="interactive"
                         >
-                          Previous
+                          <span className="hidden sm:inline">Previous</span>
+                          <span className="sm:hidden">Prev</span>
                         </Button>
                         <span className="text-sm text-muted-foreground">
-                          Page <span className="font-semibold text-foreground">{currentPage}</span> of <span className="font-semibold text-foreground">{totalPages}</span>
+                          <span className="font-semibold text-foreground">{currentPage}</span>
+                          <span className="mx-1">/</span>
+                          <span className="font-semibold text-foreground">{totalPages}</span>
                         </span>
                         <Button 
                           onClick={handleNextPage} 
                           disabled={currentPage === totalPages}
                           variant="outline"
+                          size="sm"
                           className="interactive"
                         >
                           Next

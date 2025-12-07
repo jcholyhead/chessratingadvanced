@@ -118,7 +118,79 @@ export default function EventList({ games }: EventListProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="rounded-xl border overflow-hidden">
+        {/* Mobile card layout */}
+        <div className="md:hidden space-y-3">
+          {paginatedEvents.map((event) => (
+            <div key={event.eventCode} className="rounded-xl border bg-card overflow-hidden">
+              <button
+                onClick={() => toggleEvent(event.eventCode)}
+                className="w-full p-4 text-left hover:bg-secondary/30 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium truncate">{event.eventName}</h4>
+                    <p className="text-sm text-muted-foreground font-mono-display mt-1">
+                      {formatDate(event.startDate)}
+                      {event.startDate !== event.endDate && ` — ${formatDate(event.endDate)}`}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="text-right">
+                      <div className={`font-mono-display font-semibold ${event.games.length < 3 ? "text-muted-foreground" : "text-primary"}`}>
+                        {event.performanceRating || "—"}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {event.games.length} game{event.games.length !== 1 ? 's' : ''}
+                      </div>
+                    </div>
+                    {expandedEvents.has(event.eventCode) ? (
+                      <ChevronUp className="h-5 w-5 text-primary" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </div>
+                </div>
+              </button>
+              
+              {/* Expanded games - mobile */}
+              {expandedEvents.has(event.eventCode) && (
+                <div className="border-t bg-secondary/20 divide-y">
+                  {event.games.map((game, index) => (
+                    <div key={index} className="p-3">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <Link href={`/player/${game.opponent_no}`} className="link-primary font-medium truncate flex-1">
+                          {game.opponent_name}
+                        </Link>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
+                            game.colour.toUpperCase() === 'W' 
+                              ? 'bg-white border border-foreground/20 text-foreground' 
+                              : 'bg-foreground text-background'
+                          }`}>
+                            {game.colour.toUpperCase()}
+                          </span>
+                          {getScoreBadge(game.score)}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-mono-display text-muted-foreground text-xs">
+                          {formatDate(game.game_date)}
+                        </span>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-muted-foreground">vs {game.opponent_rating || '—'}</span>
+                          <span className="font-mono-display font-semibold">{game.player_rating || '—'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop table layout */}
+        <div className="hidden md:block rounded-xl border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="bg-secondary/50 hover:bg-secondary/50">
@@ -244,22 +316,30 @@ export default function EventList({ games }: EventListProps) {
             </TableBody>
           </Table>
         </div>
+
+        {/* Pagination */}
         <div className="flex justify-between items-center mt-6">
           <Button 
             onClick={goToPreviousPage} 
             disabled={currentPage === 1}
             variant="outline"
+            size="sm"
             className="interactive"
           >
-            <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+            <ChevronLeft className="mr-1 h-4 w-4" /> 
+            <span className="hidden sm:inline">Previous</span>
+            <span className="sm:hidden">Prev</span>
           </Button>
           <span className="text-sm text-muted-foreground">
-            Page <span className="font-semibold text-foreground">{currentPage}</span> of <span className="font-semibold text-foreground">{totalPages}</span>
+            <span className="font-semibold text-foreground">{currentPage}</span>
+            <span className="mx-1">/</span>
+            <span className="font-semibold text-foreground">{totalPages}</span>
           </span>
           <Button 
             onClick={goToNextPage} 
             disabled={currentPage === totalPages}
             variant="outline"
+            size="sm"
             className="interactive"
           >
             Next <ChevronRight className="ml-1 h-4 w-4" />
