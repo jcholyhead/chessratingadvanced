@@ -24,6 +24,13 @@ interface ECFGameResponse {
   max_processing_time_daily?: string
 }
 
+interface ECFRatingResponse {
+  success: boolean
+  revised_rating?: number
+  original_rating?: number
+  category?: string
+}
+
 /**
  * Player sync service for ECF API → MongoDB synchronization
  */
@@ -118,6 +125,125 @@ export class PlayerSyncService {
       )
     } catch (error) {
       console.error('Failed to mark sync as failed:', error)
+    }
+  }
+
+  /**
+   * Fetch a single rating from ECF API
+   * Returns the rating number or null if player is unrated
+   */
+  private async fetchRating(playerCode: string, ratingType: 'S' | 'R' | 'B'): Promise<number | null> {
+    const numericCode = playerCode.replace(/[A-Z]/gi, '')
+    const today = new Date().toISOString().split('T')[0]
+    const url = `${this.ECF_BASE_URL}?v2/ratings/${ratingType}/${numericCode}/${today}`
+    
+    try {
+      const response = await fetch(url, {
+        headers: { 'User-Agent': 'ChessRatingAnalytics/1.0' },
+        signal: AbortSignal.timeout(5000)
+      })
+
+      if (!response.ok) return null
+
+      const data: ECFRatingResponse = await response.json()
+      
+      if (!data.success) return null
+      
+      const rating = data.revised_rating
+      if (typeof rating === 'number' && rating > 0) {
+        return rating
+      }
+      
+      return null
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Fetch all ratings (Standard, Rapid, Blitz) for a player
+   */
+  private async fetchAllRatings(playerCode: string): Promise<PlayerDocument['official_ratings']> {
+    const [standard, rapid, blitz] = await Promise.all([
+      this.fetchRating(playerCode, 'S'),
+      this.fetchRating(playerCode, 'R'),
+      this.fetchRating(playerCode, 'B')
+    ])
+    
+    const ratings: PlayerDocument['official_ratings'] = {}
+    
+    if (standard) {
+      ratings.Standard = { rating: standard, category: '' }
+    }
+    if (rapid) {
+      ratings.Rapid = { rating: rapid, category: '' }
+    }
+    if (blitz) {
+      ratings.Blitz = { rating: blitz, category: '' }
+    }
+    
+    return ratings
+  }
+
+  /**
+   * Sync ratings for a player - fetches current ratings from ECF API
+   * Always fetches latest ratings since they change over time
+   * NOTE: This does NOT update last_ecf_sync_date - only game sync does that
+   */
+  async syncPlayerRatings(playerCode: string): Promise<boolean> {
+    try {
+      const collection = await getPlayersCollection()
+      
+      console.log(`Fetching ratings for player ${playerCode}`)
+      const ratings = await this.fetchAllRatings(playerCode)
+      
+      // Build update object - ONLY ratings, never the game sync timestamp
+      const updates: Record<string, unknown> = {}
+      
+      if (ratings.Standard) {
+        updates['official_ratings.Standard'] = ratings.Standard
+      }
+      if (ratings.Rapid) {
+        updates['official_ratings.Rapid'] = ratings.Rapid
+      }
+      if (ratings.Blitz) {
+        updates['official_ratings.Blitz'] = ratings.Blitz
+      }
+      
+      // Track when ratings were last synced (separate from game sync)
+      updates['last_ratings_sync_date'] = new Date()
+
+      if (Object.keys(updates).length > 0) {
+        await collection.updateOne(
+          { ECF_code: playerCode },
+          { $set: updates }
+        )
+        console.log(`Updated ratings for ${playerCode}: S=${ratings.Standard?.rating || '-'}, R=${ratings.Rapid?.rating || '-'}, B=${ratings.Blitz?.rating || '-'}`)
+        return true
+      }
+
+      return false
+    } catch (error) {
+      console.error(`Failed to sync ratings for ${playerCode}:`, error)
+      return false
+    }
+  }
+
+  /**
+   * Sync ratings for multiple players in batches
+   * Used for lists like club players or search results
+   */
+  async syncPlayersRatings(playerCodes: string[]): Promise<void> {
+    const BATCH_SIZE = 5
+    const DELAY_MS = 100
+
+    for (let i = 0; i < playerCodes.length; i += BATCH_SIZE) {
+      const batch = playerCodes.slice(i, i + BATCH_SIZE)
+      await Promise.all(batch.map(code => this.syncPlayerRatings(code)))
+      
+      if (i + BATCH_SIZE < playerCodes.length) {
+        await new Promise(resolve => setTimeout(resolve, DELAY_MS))
+      }
     }
   }
 
@@ -310,6 +436,9 @@ export class PlayerSyncService {
           // Continue with other game types
         }
       }
+
+      // Also sync ratings during full sync
+      await this.syncPlayerRatings(playerId)
 
       // Mark sync as completed
       await this.markSyncCompleted(playerId, totalNewGames)

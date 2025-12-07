@@ -22,6 +22,9 @@ For comprehensive documentation including user guides, developer information, AP
 - **Common Opponents**: View statistics for most frequently played opponents, including win/loss/draw ratios.
 - **Event-based Analysis**: Group games by events and view performance in each event, with expandable details.
 - **Time Range Filtering**: Filter rating data and statistics based on different time ranges (3 months, 6 months, 1 year, 2 years, all-time).
+- **Favourite Player**: Save your preferred player for quick access across sessions.
+- **Club Pages**: Browse all players in a club with sortable rating tables.
+- **Automatic Sync**: Ratings update automatically when viewing player profiles or club lists.
 - **Responsive Design**: Optimized for both desktop and mobile viewing.
 
 ## Technology Stack

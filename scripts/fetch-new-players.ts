@@ -72,6 +72,63 @@ function extractECFNumber(ecfCode: string): number {
 }
 
 /**
+ * Fetch a single rating type from the ECF API
+ * Returns the rating number or null if unrated
+ */
+async function fetchRating(ecfNumber: number, ratingType: 'S' | 'R' | 'B'): Promise<number | null> {
+  const today = new Date().toISOString().split('T')[0]
+  const url = `${ECF_API_BASE}?v2/ratings/${ratingType}/${ecfNumber}/${today}`
+  
+  try {
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'ChessRatingAnalytics/1.0' },
+      signal: AbortSignal.timeout(5000)
+    })
+
+    if (!response.ok) return null
+
+    const data = await response.json()
+    
+    if (!data.success) return null
+    
+    // The API returns revised_rating for current rating
+    const rating = data.revised_rating
+    if (typeof rating === 'number' && rating > 0) {
+      return rating
+    }
+    
+    return null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Fetch all ratings (Standard, Rapid, Blitz) for a player
+ */
+async function fetchAllRatings(ecfNumber: number): Promise<PlayerDocument['official_ratings']> {
+  const [standard, rapid, blitz] = await Promise.all([
+    fetchRating(ecfNumber, 'S'),
+    fetchRating(ecfNumber, 'R'),
+    fetchRating(ecfNumber, 'B')
+  ])
+  
+  const ratings: PlayerDocument['official_ratings'] = {}
+  
+  if (standard) {
+    ratings.Standard = { rating: standard, category: '' }
+  }
+  if (rapid) {
+    ratings.Rapid = { rating: rapid, category: '' }
+  }
+  if (blitz) {
+    ratings.Blitz = { rating: blitz, category: '' }
+  }
+  
+  return ratings
+}
+
+/**
  * Fetch player by ECF code number from ECF API
  * The API accepts just the numeric part and returns the full code with letter
  */
@@ -95,6 +152,10 @@ async function fetchPlayerByECFNumber(ecfNumber: number): Promise<ECFPlayerRespo
     if (!data.success || !data.ECF_code) {
       return null
     }
+
+    // Fetch ratings separately since /players/code/ doesn't include them
+    const ratings = await fetchAllRatings(ecfNumber)
+    data.official_ratings = ratings
 
     return data
   } catch (error) {
@@ -186,7 +247,7 @@ async function findLargestECFNumber(): Promise<number> {
   
   // Get all ECF codes
   const result = await collection.find(
-    { ECF_code: { $exists: true, $ne: null, $ne: '' } },
+    { ECF_code: { $exists: true, $ne: '' } },
     { projection: { ECF_code: 1 } }
   ).toArray()
   

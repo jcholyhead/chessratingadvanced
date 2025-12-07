@@ -118,12 +118,17 @@ export interface PlayerDocument {
     blitz_online?: Record<string, { rating: number; category: string }>
   }
   
-  // New sync tracking fields
-  last_ecf_sync_date?: Date
+  // Sync tracking fields
+  last_ecf_sync_date?: Date      // When games were last synced (24h cooldown)
+  last_ratings_sync_date?: Date  // When ratings were last synced (no cooldown)
   sync_in_progress?: boolean
   sync_error_count?: number
   last_sync_error?: string
   total_games_count?: number
+  
+  // Backfill tracking
+  ratings_backfilled?: boolean
+  ratings_backfill_date?: Date
 }
 
 /**
@@ -143,6 +148,28 @@ export interface GameRecord {
   org_name: string | null
   event_name: string
   section_title: string
+}
+
+/**
+ * Club Document interface
+ */
+export interface ClubDocument {
+  _id?: string
+  club_code: string
+  club_name: string
+  comment?: string
+  assoc_code?: string
+  assoc_name?: string | null
+  // Sync tracking
+  last_updated?: Date
+}
+
+/**
+ * Get the clubs collection with proper typing
+ */
+export async function getClubsCollection(): Promise<Collection<ClubDocument>> {
+  const database = await getDatabase()
+  return database.collection<ClubDocument>('clubs')
 }
 
 /**

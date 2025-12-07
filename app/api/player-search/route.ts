@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { playerDataService } from '@/lib/player-data'
+import { playerSyncService } from '@/lib/player-sync'
 
 /**
  * GET handler for player search using MongoDB
@@ -46,6 +47,13 @@ export async function GET(request: NextRequest) {
         last_sync_date: player.last_ecf_sync_date
       }
     })
+
+    // Trigger rating sync for all players (fire-and-forget)
+    // Ratings update regularly, so we fetch latest values in background
+    const allPlayerCodes = transformedPlayers.map(p => p.ECF_code)
+    if (allPlayerCodes.length > 0) {
+      playerSyncService.syncPlayersRatings(allPlayerCodes).catch(() => {})
+    }
 
     const response = {
       players: transformedPlayers,

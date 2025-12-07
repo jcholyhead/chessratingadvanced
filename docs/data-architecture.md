@@ -146,11 +146,16 @@ interface PlayerDocument {
   date_last_game?: string       // YYYY-MM-DD format
   
   // Sync Tracking
-  last_ecf_sync_date?: Date     // When last synced with ECF
+  last_ecf_sync_date?: Date     // When games were last synced (24h cooldown)
+  last_ratings_sync_date?: Date // When ratings were last synced (no cooldown)
   sync_in_progress?: boolean    // Prevents concurrent syncs
   sync_error_count?: number     // Consecutive failure count
   last_sync_error?: string      // Last error message
   total_games_count?: number    // Total games across all types
+  
+  // Backfill Tracking
+  ratings_backfilled?: boolean  // Whether old ratings have been backfilled
+  ratings_backfill_date?: Date  // When backfill was completed
 }
 
 interface GameRecord {
@@ -170,8 +175,23 @@ interface GameRecord {
 }
 ```
 
+### MongoDB Collection: `clubs`
+
+```typescript
+interface ClubDocument {
+  _id: ObjectId
+  club_code: string           // Unique club identifier (e.g., "2TPT")
+  club_name: string           // Club display name
+  comment?: string            // Optional notes
+  assoc_code?: string         // Association code
+  assoc_name?: string | null  // Association name (e.g., "Shropshire")
+  last_updated?: Date         // When record was last updated
+}
+```
+
 ### MongoDB Indexes
 
+#### Players Collection
 ```javascript
 // Text search for player names
 { full_name: "text" }
@@ -181,6 +201,7 @@ interface GameRecord {
 
 // Club-based queries
 { club_code: 1, club_name: 1 }
+{ "clubs.club_code": 1 }  // For finding players by club
 
 // Sync management
 { last_ecf_sync_date: 1 }
@@ -194,6 +215,26 @@ interface GameRecord {
 // Data freshness
 { date_last_game: 1 }
 ```
+
+#### Clubs Collection
+```javascript
+// Fast lookups by club code (unique)
+{ club_code: 1 }  // unique: true
+
+// Text search for club names
+{ club_name: "text" }
+
+// Association queries
+{ assoc_code: 1 }
+```
+
+### Client-Side Storage (localStorage)
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `favouritePlayerCode` | string | ECF code of user's favourite player |
+
+The favourite player is loaded on app start and used as the default selection when no player is specified in the URL.
 
 ---
 
@@ -362,7 +403,50 @@ GET /api/official-rating?playerCode={code}&gameType={type}&date={date}
 
 ---
 
-#### 5. Player Updates (SSE)
+#### 5. Club Players
+
+```
+GET /api/club-players?clubCode={code}
+```
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| clubCode | string | Yes | Club code (e.g., "2TPT") |
+
+**Response:**
+```json
+{
+  "club_code": "2TPT",
+  "club_name": "Telepost (Shrewsbury)",
+  "assoc_name": "Shropshire",
+  "players": [
+    {
+      "ECF_code": "319013E",
+      "full_name": "Holyhead, James",
+      "category": "GOLD",
+      "date_last_game": "2025-10-07",
+      "ratings": {
+        "standard": 1650,
+        "rapid": 1400,
+        "blitz": null
+      },
+      "primary_rating": 1650
+    }
+  ],
+  "total_players": 42,
+  "success": true
+}
+```
+
+**Behavior:**
+- Returns all players associated with the club
+- Triggers background rating sync for all players
+- Players sorted by rating (highest first), unrated at bottom
+
+---
+
+#### 6. Player Updates (SSE)
 
 ```
 GET /api/player-updates?playerCode={code}
@@ -537,21 +621,91 @@ GET /api/player-updates?playerCode={code}
                    └─────────────────────────────────┘
 ```
 
+### Flow 4: Club Page Visit
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                      USER VISITS /club/2TPT                                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+                                     │
+                                     ▼
+                   ┌─────────────────────────────────┐
+                   │  GET /api/club-players          │
+                   │      ?clubCode=2TPT             │
+                   └─────────────────┬───────────────┘
+                                     │
+                   ┌─────────────────┴───────────────┐
+                   │                                 │
+                   ▼                                 ▼
+       ┌───────────────────┐           ┌───────────────────────┐
+       │  Query clubs      │           │  Query players        │
+       │  collection       │           │  by club_code or      │
+       │  for club info    │           │  clubs.club_code      │
+       └─────────┬─────────┘           └───────────┬───────────┘
+                 │                                 │
+                 └───────────────┬─────────────────┘
+                                 │
+                                 ▼
+                   ┌─────────────────────────────────┐
+                   │  Transform player data:         │
+                   │  - Extract ratings (S, R, B)    │
+                   │  - Calculate primary_rating     │
+                   │  - Sort by rating (desc)        │
+                   └─────────────────┬───────────────┘
+                                     │
+                                     ▼
+                   ┌─────────────────────────────────┐
+                   │  Background: Trigger rating     │
+                   │  sync for all players in list   │
+                   │  (no await, non-blocking)       │
+                   └─────────────────┬───────────────┘
+                                     │
+                                     ▼
+                   ┌─────────────────────────────────┐
+                   │  Return player list to client   │
+                   │  with sortable table UI         │
+                   └─────────────────────────────────┘
+```
+
 ---
 
 ## Sync System
+
+### Overview
+
+The sync system handles two types of data:
+1. **Game Sync** - Fetches game history (24-hour cooldown)
+2. **Rating Sync** - Fetches current ratings (no cooldown, syncs on every page load)
 
 ### Configuration
 
 ```typescript
 // lib/player-sync.ts
 class PlayerSyncService {
-  private readonly SYNC_COOLDOWN_HOURS = 24      // Minimum time between syncs
+  private readonly SYNC_COOLDOWN_HOURS = 24      // Minimum time between game syncs
   private readonly INITIAL_GAME_LIMIT = 100      // First fetch attempt
   private readonly EXTENDED_GAME_LIMIT = 1000    // Second fetch attempt
   private readonly MAX_GAME_LIMIT = 2000         // Final fetch attempt
 }
 ```
+
+### Rating Sync
+
+Ratings are fetched from separate ECF API endpoints:
+- `/v2/ratings/S/{code}/{date}` - Standard rating
+- `/v2/ratings/R/{code}/{date}` - Rapid rating
+- `/v2/ratings/B/{code}/{date}` - Blitz rating
+
+**Important:** The `/players/code/` endpoint does NOT return ratings - they must be fetched separately.
+
+Rating sync is triggered:
+- When viewing a player's profile (as part of full sync)
+- When players appear in search results (background sync)
+- When players appear in club lists (background sync)
+
+Timestamps:
+- `last_ecf_sync_date` - When games were last synced (24h cooldown applies)
+- `last_ratings_sync_date` - When ratings were last synced (no cooldown)
 
 ### Duplicate Detection
 
@@ -631,10 +785,12 @@ eventSource.onmessage = (event) => {
 | Endpoint | Purpose |
 |----------|---------|
 | `?v2/players/name/{name}` | Search players by name |
-| `?v2/player/{code}` | Get player details |
+| `?v2/players/code/{code}` | Get player details (no ratings!) |
 | `?v2/games/{type}/player/{code}/limit/{n}` | Get games for player |
+| `?v2/ratings/{type}/{code}/{date}` | Get rating at specific date |
+| `?v2/clubs/all_active` | Get all active clubs |
 
-#### Game Type Codes
+#### Game/Rating Type Codes
 
 | Type | Code |
 |------|------|
@@ -648,12 +804,24 @@ eventSource.onmessage = (event) => {
 # Search for players named "Smith"
 curl "https://rating.englishchess.org.uk/v2/new/api.php?v2/players/name/Smith"
 
-# Get player details
-curl "https://rating.englishchess.org.uk/v2/new/api.php?v2/player/319013E"
+# Get player details (note: does NOT include ratings)
+curl "https://rating.englishchess.org.uk/v2/new/api.php?v2/players/code/319013"
 
 # Get last 100 Standard games
 curl "https://rating.englishchess.org.uk/v2/new/api.php?v2/games/S/player/319013E/limit/100"
+
+# Get current Standard rating
+curl "https://rating.englishchess.org.uk/v2/new/api.php?v2/ratings/S/319013/2025-12-07"
+
+# Get all active clubs
+curl "https://rating.englishchess.org.uk/v2/new/api.php?v2/clubs/all_active"
 ```
+
+#### Important Notes
+
+- The `/players/code/` endpoint does **NOT** return ratings
+- Ratings must be fetched separately from `/ratings/{type}/{code}/{date}`
+- Historical ratings (pre-2020) use old 3-digit format: `new_rating = old_rating * 7.5 + 700`
 
 #### Rate Limiting
 
@@ -663,23 +831,52 @@ curl "https://rating.englishchess.org.uk/v2/new/api.php?v2/games/S/player/319013
 
 ---
 
+## Frontend Routes
+
+| Route | Component | Description |
+|-------|-----------|-------------|
+| `/` | `app/page.tsx` | Main player search and results page |
+| `/club/[clubCode]` | `app/club/[clubCode]/page.tsx` | Club page with sortable player list |
+
+---
+
 ## File Reference
 
 | File | Purpose |
 |------|---------|
 | `lib/mongodb.ts` | MongoDB connection, schema types, indexes |
 | `lib/player-data.ts` | PlayerDataService - main data access layer |
-| `lib/player-sync.ts` | PlayerSyncService - ECF sync logic |
+| `lib/player-sync.ts` | PlayerSyncService - ECF sync logic (games + ratings) |
 | `lib/realtime.ts` | SSE connection manager, notifications |
 | `app/api/player-search/route.ts` | Search API endpoint |
 | `app/api/player-details/route.ts` | Player details API endpoint |
 | `app/api/chess-results/route.ts` | Chess results API endpoint |
 | `app/api/official-rating/route.ts` | Official rating API endpoint |
 | `app/api/player-updates/route.ts` | SSE updates endpoint |
+| `app/api/club-players/route.ts` | Club players list API endpoint |
+| `components/FavouriteButton.tsx` | Favourite player functionality |
+| `components/OfficialRating.tsx` | Display player's official rating |
 
 ---
 
 ## Maintenance Scripts
+
+### Data Import Scripts
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `scripts/fetch-new-players.ts` | Import new players by ECF code | `npx tsx scripts/fetch-new-players.ts [--count N] [--start N]` |
+| `scripts/import-clubs.ts` | Import all active ECF clubs | `npx tsx scripts/import-clubs.ts [--dry-run]` |
+| `scripts/import-sample-data.ts` | Import sample player data | `npx tsx scripts/import-sample-data.ts` |
+
+### Backfill Scripts
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `scripts/backfill-old-ratings.ts` | Backfill old ratings for a single player | `npx tsx scripts/backfill-old-ratings.ts <playerCode>` |
+| `scripts/backfill-all-ratings.ts` | Batch backfill old ratings for all players | `npx tsx scripts/backfill-all-ratings.ts [--batch N] [--dry-run]` |
+
+### Debug & Cleanup Scripts
 
 | Script | Purpose | Usage |
 |--------|---------|-------|

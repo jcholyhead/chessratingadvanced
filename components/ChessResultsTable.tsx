@@ -108,6 +108,8 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
   const [groupByEvent, setGroupByEvent] = useState(true)
   const [liveRating, setLiveRating] = useState<number | null>(null)
   const [officialRating, setOfficialRating] = useState<number | null>(null)
+  const [playerClubs, setPlayerClubs] = useState<Array<{ club_code: string; club_name: string }>>([])
+
 
   const renderCount = useRef(0)
   if (!playerCode) {
@@ -136,6 +138,7 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
         const response = await fetch(`/api/player-details?playerCode=${playerCode}`)
         const data = await response.json()
         setPlayerName(data.full_name)
+        setPlayerClubs(data.clubs || [])
       } catch (error) {
         console.error("Error fetching player details:", error)
       }
@@ -323,6 +326,26 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
                       className="border p-1 rounded text-sm"
                     />
                   </div>
+                  {playerClubs.length > 0 && (
+                    <div className="flex items-start space-x-2">
+                      <span className="text-base font-medium text-gray-700 w-52">
+                        {playerClubs.length === 1 ? 'Club:' : 'Clubs:'}
+                      </span>
+                      <div className="flex flex-wrap gap-x-2 gap-y-1">
+                        {playerClubs.map((club, index) => (
+                          <span key={club.club_code}>
+                            <Link
+                              href={`/club/${club.club_code}`}
+                              className="text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              {club.club_name}
+                            </Link>
+                            {index < playerClubs.length - 1 && ','}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {stableFilteredGames.length > 0 && (
                     <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
                       <span className="text-base font-medium text-gray-700 w-52">Performance Rating:</span>
