@@ -17,6 +17,7 @@ import EventList from "./EventList"
 import { OfficialRating } from "./OfficialRating"
 import { LiveRating } from "./LiveRating"
 import { BestResults } from "./BestResults"
+import { FavouriteButton, getFavouritePlayerCode } from "./FavouriteButton"
 
 // Helper function to sort games by date and opponent name
 const sortGames = (games: Game[]) => {
@@ -82,9 +83,21 @@ interface ChessResultsTableProps {
 
 export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTableProps) {
   const router = useRouter()
-  const [playerCode, setPlayerCode] = useState(
-    initialPlayerCode || PLAYER_CODES[Math.floor(Math.random() * PLAYER_CODES.length)],
-  )
+  const [playerCode, setPlayerCode] = useState(() => {
+    // Priority: 1. initialPlayerCode (from URL), 2. favourite from localStorage, 3. random
+    if (initialPlayerCode) {
+      return initialPlayerCode
+    }
+    // Check localStorage for favourite (only on client)
+    if (typeof window !== 'undefined') {
+      const favourite = getFavouritePlayerCode()
+      if (favourite) {
+        return favourite
+      }
+    }
+    // Fall back to random
+    return PLAYER_CODES[Math.floor(Math.random() * PLAYER_CODES.length)]
+  })
   const [gameType, setGameType] = useState("Standard")
   const [currentPage, setCurrentPage] = useState(1)
   const [playerName, setPlayerName] = useState<string | null>(null)
@@ -279,7 +292,12 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
           <div className="w-full lg:w-1/2">
             <Card className="h-full">
               <CardHeader>
-                <CardTitle>{playerName || "Player Information"}</CardTitle>
+                <CardTitle className="flex items-center">
+                  {playerName || "Player Information"}
+                  {playerName && (
+                    <FavouriteButton playerCode={playerCode} playerName={playerName} />
+                  )}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex flex-col space-y-4">

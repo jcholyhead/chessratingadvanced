@@ -33,9 +33,12 @@ export function OfficialRating({ playerCode, gameType, setOfficialRating }: Offi
         }
         const data = await response.json()
         if (data.success) {
-          setRating(data.revised_rating)
-          setOfficialRating(data.revised_rating)
-          setIsProvisional(data.revised_category === 'P')
+          // Handle both old ECF API format (revised_rating) and new MongoDB format (rating)
+          const ratingValue = data.rating ?? data.revised_rating ?? null
+          const categoryValue = data.rating_category ?? data.revised_category ?? ''
+          setRating(ratingValue)
+          setOfficialRating(ratingValue)
+          setIsProvisional(categoryValue === 'P')
         } else {
           setRating(null)
         }
