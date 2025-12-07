@@ -2,7 +2,7 @@ import { useMemo, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown, ChevronUp, Users } from "lucide-react"
 import Link from "next/link"
 import { formatDate } from "@/lib/utils"
 
@@ -93,89 +93,112 @@ export default function CommonOpponentsTable({ games, gameType }: CommonOpponent
     })
   }
 
+  const getScoreBadge = (score: number) => {
+    if (score === 1) return <span className="inline-flex items-center justify-center h-6 w-12 rounded-md text-xs font-semibold bg-green-100 text-green-700">Win</span>
+    if (score === 0) return <span className="inline-flex items-center justify-center h-6 w-12 rounded-md text-xs font-semibold bg-red-100 text-red-700">Loss</span>
+    return <span className="inline-flex items-center justify-center h-6 w-12 rounded-md text-xs font-semibold bg-amber-100 text-amber-700">Draw</span>
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Most Common {gameType || "Chess"} Opponents</CardTitle>
+    <Card className="card-hover border-0 shadow-sm">
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-2">
+          <Users className="h-5 w-5 text-primary" />
+          <CardTitle className="text-lg">Common {gameType || "Chess"} Opponents</CardTitle>
+        </div>
         <CardDescription>
-          Top 10 opponents by number of {gameType ? `${gameType.toLowerCase()} ` : ""}games played
+          Top 10 opponents by number of games played
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[30px]"></TableHead>
-              <TableHead>Opponent</TableHead>
-              <TableHead>Games</TableHead>
-              <TableHead>Wins</TableHead>
-              <TableHead>Losses</TableHead>
-              <TableHead>Draws</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {opponentStats.map((opponent) => (
-              <>
-                <TableRow key={opponent.opponent_no} className="hover:bg-muted/50 cursor-pointer">
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() => toggleExpand(opponent.name)}
-                    >
-                      {expandedOpponents.has(opponent.name) ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                      <span className="sr-only">Toggle game details</span>
-                    </Button>
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    <Link href={`/player/${opponent.opponent_no}`} className="text-blue-600 hover:underline">
-                      {opponent.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{opponent.totalGames}</TableCell>
-                  <TableCell>{opponent.wins}</TableCell>
-                  <TableCell>{opponent.losses}</TableCell>
-                  <TableCell>{opponent.draws}</TableCell>
-                </TableRow>
-                {expandedOpponents.has(opponent.name) && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="p-0">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Result</TableHead>
-                            <TableHead>Player Rating</TableHead>
-                            <TableHead>Opponent Rating</TableHead>
-                            <TableHead>Event</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {opponent.games.map((game, index) => (
-                            <TableRow key={index}>
-                              <TableCell>{formatDate(game.game_date)}</TableCell>
-                              <TableCell>{game.score === 1 ? "Win" : game.score === 0 ? "Loss" : "Draw"}</TableCell>
-                              <TableCell>{game.player_rating || "N/A"}</TableCell>
-                              <TableCell>{game.opponent_rating || "N/A"}</TableCell>
-                              <TableCell>{game.event_name || "N/A"}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+        <div className="rounded-xl border overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-secondary/50 hover:bg-secondary/50">
+                <TableHead className="w-[40px]"></TableHead>
+                <TableHead className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Opponent</TableHead>
+                <TableHead className="text-xs uppercase tracking-wider text-muted-foreground font-semibold text-center">Games</TableHead>
+                <TableHead className="text-xs uppercase tracking-wider text-muted-foreground font-semibold text-center">W</TableHead>
+                <TableHead className="text-xs uppercase tracking-wider text-muted-foreground font-semibold text-center">L</TableHead>
+                <TableHead className="text-xs uppercase tracking-wider text-muted-foreground font-semibold text-center">D</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {opponentStats.map((opponent) => (
+                <>
+                  <TableRow 
+                    key={opponent.opponent_no} 
+                    className="table-row-hover cursor-pointer"
+                    onClick={() => toggleExpand(opponent.name)}
+                  >
+                    <TableCell className="py-3">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 hover:bg-transparent"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleExpand(opponent.name)
+                        }}
+                      >
+                        {expandedOpponents.has(opponent.name) ? (
+                          <ChevronUp className="h-4 w-4 text-primary" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        <span className="sr-only">Toggle game details</span>
+                      </Button>
                     </TableCell>
+                    <TableCell className="py-3">
+                      <Link 
+                        href={`/player/${opponent.opponent_no}`} 
+                        className="link-primary font-medium"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {opponent.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="py-3 text-center font-mono-display font-semibold">{opponent.totalGames}</TableCell>
+                    <TableCell className="py-3 text-center font-mono-display text-green-600">{opponent.wins}</TableCell>
+                    <TableCell className="py-3 text-center font-mono-display text-red-500">{opponent.losses}</TableCell>
+                    <TableCell className="py-3 text-center font-mono-display text-amber-600">{opponent.draws}</TableCell>
                   </TableRow>
-                )}
-              </>
-            ))}
-          </TableBody>
-        </Table>
+                  {expandedOpponents.has(opponent.name) && (
+                    <TableRow className="bg-secondary/30">
+                      <TableCell colSpan={6} className="p-0">
+                        <div className="p-4">
+                          <Table>
+                            <TableHeader>
+                              <TableRow className="hover:bg-transparent">
+                                <TableHead className="text-xs text-muted-foreground">Date</TableHead>
+                                <TableHead className="text-xs text-muted-foreground">Result</TableHead>
+                                <TableHead className="text-xs text-muted-foreground text-right">Your Rating</TableHead>
+                                <TableHead className="text-xs text-muted-foreground text-right">Opp. Rating</TableHead>
+                                <TableHead className="text-xs text-muted-foreground">Event</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {opponent.games.map((game, index) => (
+                                <TableRow key={index} className="hover:bg-secondary/50">
+                                  <TableCell className="py-2 font-mono-display text-sm">{formatDate(game.game_date)}</TableCell>
+                                  <TableCell className="py-2">{getScoreBadge(game.score)}</TableCell>
+                                  <TableCell className="py-2 text-right font-mono-display text-sm">{game.player_rating || "—"}</TableCell>
+                                  <TableCell className="py-2 text-right font-mono-display text-sm text-muted-foreground">{game.opponent_rating || "—"}</TableCell>
+                                  <TableCell className="py-2 text-sm text-muted-foreground max-w-[200px] truncate">{game.event_name || "—"}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   )
 }
-

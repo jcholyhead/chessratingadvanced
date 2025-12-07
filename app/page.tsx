@@ -4,18 +4,34 @@ import ChessResultsTable from "@/components/ChessResultsTable"
 
 export default function Home() {
   return (
-    <div className="container mx-auto">
+    <div className="container mx-auto max-w-7xl">
+      <header className="mb-8 animate-slide-up">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground mb-2">
+          Chess Rating Analytics
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Enhanced analytics for English Chess Federation ratings
+        </p>
+      </header>
       
-      <h2 className="text-xl font-semibold mb-4">Enhanced Analytics for English Chess Federation Ratings</h2>
-      <div className="mb-4">
-        <Suspense fallback={<div>Loading player search...</div>}>
+      <div className="mb-8 animate-slide-up stagger-1">
+        <Suspense fallback={
+          <div className="h-12 bg-secondary/50 rounded-lg animate-pulse" />
+        }>
           <PlayerSearchWrapper />
         </Suspense>
       </div>
-      <Suspense fallback={<div>Please search for a player to view their results.</div>}>
-        <ChessResultsTable initialPlayerCode={null} />
-      </Suspense>
+      
+      <div className="animate-slide-up stagger-2">
+        <Suspense fallback={
+          <div className="space-y-4">
+            <div className="h-64 bg-secondary/50 rounded-xl animate-pulse" />
+            <div className="h-96 bg-secondary/50 rounded-xl animate-pulse" />
+          </div>
+        }>
+          <ChessResultsTable initialPlayerCode={null} />
+        </Suspense>
+      </div>
     </div>
   )
 }
-

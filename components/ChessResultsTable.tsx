@@ -282,8 +282,19 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
   }, [])
 
   // Error and loading states
-  if (error) return <div className="text-red-500">Failed to load: {error.message}</div>
-  if (isLoading) return <div className="text-blue-500">Loading...</div>
+  if (error) return (
+    <div className="flex items-center justify-center p-8 rounded-xl bg-destructive/10 text-destructive">
+      <span className="font-medium">Failed to load: {error.message}</span>
+    </div>
+  )
+  if (isLoading) return (
+    <div className="flex items-center justify-center p-8">
+      <div className="flex items-center gap-3 text-muted-foreground">
+        <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <span>Loading player data...</span>
+      </div>
+    </div>
+  )
 
   // Render component
   return (
@@ -293,17 +304,17 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left column: Player information and performance rating */}
           <div className="w-full lg:w-1/2">
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  {playerName || "Player Information"}
+            <Card className="h-full card-hover border-0 shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-2xl">
+                  <span className="text-foreground">{playerName || "Player Information"}</span>
                   {playerName && (
                     <FavouriteButton playerCode={playerCode} playerName={playerName} />
                   )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex flex-col space-y-4">
+                <div className="flex flex-col space-y-3">
                   <OfficialRating
                     playerCode={playerCode}
                     gameType={gameType as "Standard" | "Rapid" | "Blitz"}
@@ -315,46 +326,44 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
                     officialRating={officialRating}
                   />
                 </div>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-base font-medium text-gray-700 w-52">Player Code:</span>
+                <div className="space-y-3 pt-2 border-t">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-muted-foreground w-40">Player Code</span>
                     <input
                       type="text"
                       id="playerCode"
                       value={playerCode}
                       onChange={handlePlayerCodeChange}
-                      className="border p-1 rounded text-sm"
+                      className="px-3 py-1.5 rounded-lg border bg-secondary/50 text-sm font-mono-display focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                     />
                   </div>
                   {playerClubs.length > 0 && (
-                    <div className="flex items-start space-x-2">
-                      <span className="text-base font-medium text-gray-700 w-52">
-                        {playerClubs.length === 1 ? 'Club:' : 'Clubs:'}
+                    <div className="flex items-start gap-3">
+                      <span className="text-sm font-medium text-muted-foreground w-40">
+                        {playerClubs.length === 1 ? 'Club' : 'Clubs'}
                       </span>
-                      <div className="flex flex-wrap gap-x-2 gap-y-1">
-                        {playerClubs.map((club, index) => (
-                          <span key={club.club_code}>
-                            <Link
-                              href={`/club/${club.club_code}`}
-                              className="text-blue-600 hover:text-blue-800 hover:underline"
-                            >
-                              {club.club_name}
-                            </Link>
-                            {index < playerClubs.length - 1 && ','}
-                          </span>
+                      <div className="flex flex-wrap gap-2">
+                        {playerClubs.map((club) => (
+                          <Link
+                            key={club.club_code}
+                            href={`/club/${club.club_code}`}
+                            className="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+                          >
+                            {club.club_name}
+                          </Link>
                         ))}
                       </div>
                     </div>
                   )}
                   {stableFilteredGames.length > 0 && (
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
-                      <span className="text-base font-medium text-gray-700 w-52">Performance Rating:</span>
-                      <div className="flex items-center space-x-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <span className="text-sm font-medium text-muted-foreground w-40">Performance</span>
+                      <div className="flex items-center gap-3">
                         <Select
                           onValueChange={handlePerformanceGameCountChange}
                           value={performanceGameCount.toString()}
                         >
-                          <SelectTrigger className="w-[180px]">
+                          <SelectTrigger className="w-[160px] h-9">
                             <SelectValue placeholder="Select game count" />
                           </SelectTrigger>
                           <SelectContent>
@@ -365,7 +374,7 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
                             ))}
                           </SelectContent>
                         </Select>
-                        <span className="text-lg font-semibold">{performanceRating}</span>
+                        <span className="text-xl font-bold font-mono-display text-primary">{performanceRating}</span>
                       </div>
                     </div>
                   )}
@@ -391,27 +400,34 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
           </TabsList>
           {GAME_TYPES.map((type) => (
             <TabsContent key={type} value={type}>
-              <div className="w-full mb-8">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-semibold">Rating Chart</h3>
-                  <Tabs value={timeRange} onValueChange={handleTimeRangeChange}>
-                    <TabsList>
-                      {TIME_RANGES.map((range) => (
-                        <TabsTrigger key={range.value} value={range.value}>
-                          {range.label}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                  </Tabs>
-                </div>
-                {timeFilteredGames.length > 0 ? (
-                  <PlayerRatingChart games={timeFilteredGames} gameType={type} colorIndex={colorIndices[type] || 0} currentRating={liveRating ?? officialRating ?? 0} />
-                ) : (
-                  <div className="text-gray-500 h-[400px] flex items-center justify-center">
-                    No games found for the selected time range.
+              <Card className="mb-8 card-hover border-0 shadow-sm">
+                <CardHeader className="pb-2">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                    <CardTitle className="text-lg">Rating History</CardTitle>
+                    <Tabs value={timeRange} onValueChange={handleTimeRangeChange}>
+                      <TabsList className="bg-secondary/70">
+                        {TIME_RANGES.map((range) => (
+                          <TabsTrigger key={range.value} value={range.value} className="text-xs px-3">
+                            {range.label}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                    </Tabs>
                   </div>
-                )}
-              </div>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  {timeFilteredGames.length > 0 ? (
+                    <PlayerRatingChart games={timeFilteredGames} gameType={type} colorIndex={colorIndices[type] || 0} currentRating={liveRating ?? officialRating ?? 0} />
+                  ) : (
+                    <div className="text-muted-foreground h-[400px] flex flex-col items-center justify-center gap-2">
+                      <svg className="h-12 w-12 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      <span>No games found for the selected time range</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
               {/* Best Results (visible only on smaller screens, below the rating chart) */}
               <div className="lg:hidden mb-8">
@@ -421,57 +437,85 @@ export default function ChessResultsTable({ initialPlayerCode }: ChessResultsTab
               {timeFilteredGames.length > 0 && (
                 <>
                   <CommonOpponentsTable games={timeFilteredGames} gameType={type} />
-                  <div className="flex items-center space-x-2 mt-8 mb-4">
+                  <div className="flex items-center gap-3 mt-8 mb-4 p-3 rounded-lg bg-secondary/50">
                     <Switch id="group-by-event" checked={groupByEvent} onCheckedChange={setGroupByEvent} />
-                    <Label htmlFor="group-by-event">Group games by event</Label>
+                    <Label htmlFor="group-by-event" className="text-sm font-medium cursor-pointer">
+                      Group games by event
+                    </Label>
                   </div>
                   {groupByEvent ? (
                     <EventList games={timeFilteredGames} />
                   ) : (
                     <>
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full bg-white border border-gray-300">
+                      <div className="overflow-x-auto rounded-xl border bg-card">
+                        <table className="min-w-full">
                           <thead>
-                            <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                              <th className="py-3 px-6 text-left">Date</th>
-                              <th className="py-3 px-6 text-left">Color</th>
-                              <th className="py-3 px-6 text-left">Score</th>
-                              <th className="py-3 px-6 text-left">Opponent</th>
-                              <th className="py-3 px-6 text-left">Opponent Rating</th>
-                              <th className="py-3 px-6 text-left">Player Rating</th>
-                              <th className="py-3 px-6 text-left">Event</th>
+                            <tr className="border-b bg-secondary/50">
+                              <th className="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
+                              <th className="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Color</th>
+                              <th className="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Score</th>
+                              <th className="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Opponent</th>
+                              <th className="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Opp. Rating</th>
+                              <th className="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Your Rating</th>
+                              <th className="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Event</th>
                             </tr>
                           </thead>
-                          <tbody className="text-gray-600 text-sm font-light">
+                          <tbody className="divide-y">
                             {paginatedGames.map((game) => (
-                              <tr key={game.id} className="border-b border-gray-200 hover:bg-gray-100">
-                                <td className="py-3 px-6 text-left whitespace-nowrap">{formatDate(game.game_date)}</td>
-                                <td className="py-3 px-6 text-left">{game.colour}</td>
-                                <td className="py-3 px-6 text-left">{game.score === 5 ? "½" : game.score}</td>
-                                <td className="py-3 px-6 text-left">
+                              <tr key={game.id} className="table-row-hover">
+                                <td className="py-3 px-4 whitespace-nowrap text-sm font-mono-display">{formatDate(game.game_date)}</td>
+                                <td className="py-3 px-4">
+                                  <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                                    game.colour.toUpperCase() === 'W' 
+                                      ? 'bg-white border-2 border-foreground/20 text-foreground' 
+                                      : 'bg-foreground text-background'
+                                  }`}>
+                                    {game.colour.toUpperCase()}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className={`inline-flex h-7 w-7 items-center justify-center rounded-md text-sm font-semibold ${
+                                    game.score === 1 ? 'bg-green-100 text-green-700' :
+                                    game.score === 0 ? 'bg-red-100 text-red-700' :
+                                    'bg-amber-100 text-amber-700'
+                                  }`}>
+                                    {game.score === 5 ? "½" : game.score}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4">
                                   <Link
                                     href={`/?playerCode=${game.opponent_no}`}
-                                    className="text-blue-600 hover:underline"
+                                    className="link-primary animated-underline"
                                   >
                                     {game.opponent_name}
                                   </Link>
                                 </td>
-                                <td className="py-3 px-6 text-left">{game.opponent_rating}</td>
-                                <td className="py-3 px-6 text-left">{game.player_rating}</td>
-                                <td className="py-3 px-6 text-left">{game.event_name}</td>
+                                <td className="py-3 px-4 font-mono-display text-sm text-muted-foreground">{game.opponent_rating || '—'}</td>
+                                <td className="py-3 px-4 font-mono-display text-sm font-medium">{game.player_rating || '—'}</td>
+                                <td className="py-3 px-4 text-sm text-muted-foreground max-w-[200px] truncate">{game.event_name}</td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
                       </div>
-                      <div className="flex justify-between items-center mt-4">
-                        <Button onClick={handlePreviousPage} disabled={currentPage === 1}>
+                      <div className="flex justify-between items-center mt-6">
+                        <Button 
+                          onClick={handlePreviousPage} 
+                          disabled={currentPage === 1}
+                          variant="outline"
+                          className="interactive"
+                        >
                           Previous
                         </Button>
-                        <span>
-                          Page {currentPage} of {totalPages}
+                        <span className="text-sm text-muted-foreground">
+                          Page <span className="font-semibold text-foreground">{currentPage}</span> of <span className="font-semibold text-foreground">{totalPages}</span>
                         </span>
-                        <Button onClick={handleNextPage} disabled={currentPage === totalPages}>
+                        <Button 
+                          onClick={handleNextPage} 
+                          disabled={currentPage === totalPages}
+                          variant="outline"
+                          className="interactive"
+                        >
                           Next
                         </Button>
                       </div>

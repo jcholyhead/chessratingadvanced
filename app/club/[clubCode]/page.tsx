@@ -140,16 +140,16 @@ export default function ClubPage({ params }: { params: { clubCode: string } }) {
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
-      return <ChevronsUpDown className="h-4 w-4 ml-1 text-gray-400" />
+      return <ChevronsUpDown className="h-3.5 w-3.5 ml-1 text-muted-foreground/50" />
     }
     return sortDirection === 'asc' 
-      ? <ChevronUp className="h-4 w-4 ml-1" />
-      : <ChevronDown className="h-4 w-4 ml-1" />
+      ? <ChevronUp className="h-3.5 w-3.5 ml-1 text-primary" />
+      : <ChevronDown className="h-3.5 w-3.5 ml-1 text-primary" />
   }
 
   const SortableHeader = ({ field, children, className = '' }: { field: SortField; children: React.ReactNode; className?: string }) => (
     <th 
-      className={`py-3 px-4 font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 select-none ${className}`}
+      className={`py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground cursor-pointer hover:text-foreground select-none transition-colors ${className}`}
       onClick={() => handleSort(field)}
     >
       <div className={`flex items-center ${className.includes('text-center') ? 'justify-center' : ''}`}>
@@ -161,15 +161,19 @@ export default function ClubPage({ params }: { params: { clubCode: string } }) {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-8"></div>
-          <div className="space-y-3">
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className="h-12 bg-gray-200 rounded"></div>
-            ))}
-          </div>
+      <div className="container mx-auto max-w-6xl py-8">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-secondary rounded-lg w-1/3"></div>
+          <div className="h-4 bg-secondary rounded-lg w-1/4"></div>
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-0">
+              <div className="space-y-0">
+                {[...Array(10)].map((_, i) => (
+                  <div key={i} className="h-14 border-b bg-secondary/30 last:border-0"></div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     )
@@ -177,17 +181,24 @@ export default function ClubPage({ params }: { params: { clubCode: string } }) {
 
   if (error) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto max-w-6xl py-8">
         <Link 
           href="/" 
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
+          className="inline-flex items-center gap-1.5 text-primary hover:text-primary/80 mb-6 text-sm font-medium transition-colors"
         >
-          <ArrowLeft className="h-4 w-4 mr-1" />
+          <ArrowLeft className="h-4 w-4" />
           Back to search
         </Link>
-        <Card>
-          <CardContent className="py-8">
-            <p className="text-red-500 text-center">{error}</p>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="py-12">
+            <div className="text-center">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 mb-4">
+                <svg className="h-6 w-6 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <p className="text-destructive font-medium">{error}</p>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -199,35 +210,47 @@ export default function ClubPage({ params }: { params: { clubCode: string } }) {
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto max-w-6xl py-8 animate-fade-in">
       <Link 
         href="/" 
-        className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
+        className="inline-flex items-center gap-1.5 text-primary hover:text-primary/80 mb-6 text-sm font-medium transition-colors"
       >
-        <ArrowLeft className="h-4 w-4 mr-1" />
+        <ArrowLeft className="h-4 w-4" />
         Back to search
       </Link>
       
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">{clubData.club_name}</CardTitle>
-          {clubData.assoc_name && (
-            <p className="text-gray-600">{clubData.assoc_name}</p>
-          )}
-          <p className="text-sm text-gray-500">
-            {clubData.total_players} {clubData.total_players === 1 ? 'player' : 'players'}
-          </p>
+      <Card className="border-0 shadow-sm card-hover">
+        <CardHeader className="border-b bg-secondary/30">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <CardTitle className="text-2xl font-bold">{clubData.club_name}</CardTitle>
+              {clubData.assoc_name && (
+                <p className="text-muted-foreground mt-1">{clubData.assoc_name}</p>
+              )}
+            </div>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <span className="font-semibold text-sm">
+                {clubData.total_players} {clubData.total_players === 1 ? 'player' : 'players'}
+              </span>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {clubData.players.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">
-              No players found for this club.
-            </p>
+            <div className="text-muted-foreground text-center py-12">
+              <svg className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <p>No players found for this club</p>
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b bg-gray-50">
+                  <tr className="border-b bg-secondary/50">
                     <SortableHeader field="name" className="text-left">Name</SortableHeader>
                     <SortableHeader field="standard" className="text-center">Standard</SortableHeader>
                     <SortableHeader field="rapid" className="text-center">Rapid</SortableHeader>
@@ -235,46 +258,46 @@ export default function ClubPage({ params }: { params: { clubCode: string } }) {
                     <SortableHeader field="lastGame" className="text-center">Last Game</SortableHeader>
                   </tr>
                 </thead>
-                <tbody>
-                  {sortedPlayers.map((player, index) => (
+                <tbody className="divide-y">
+                  {sortedPlayers.map((player) => (
                     <tr 
                       key={player.ECF_code} 
-                      className={`border-b hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}
+                      className="table-row-hover"
                     >
                       <td className="py-3 px-4">
                         <Link
                           href={`/player/${player.ECF_code}`}
-                          className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                          className="link-primary font-medium"
                         >
                           {player.full_name}
                         </Link>
-                        <span className="text-gray-400 text-sm ml-2">
-                          ({player.ECF_code})
+                        <span className="text-muted-foreground text-xs ml-2 font-mono-display">
+                          {player.ECF_code}
                         </span>
                       </td>
                       <td className="text-center py-3 px-4">
                         {player.ratings.standard && player.ratings.standard > 0 ? (
-                          <span className="font-semibold">{player.ratings.standard}</span>
+                          <span className="font-semibold font-mono-display">{player.ratings.standard}</span>
                         ) : (
-                          <span className="text-gray-400 italic">Unrated</span>
+                          <span className="text-muted-foreground text-sm">—</span>
                         )}
                       </td>
                       <td className="text-center py-3 px-4">
                         {player.ratings.rapid && player.ratings.rapid > 0 ? (
-                          <span className="font-semibold">{player.ratings.rapid}</span>
+                          <span className="font-semibold font-mono-display">{player.ratings.rapid}</span>
                         ) : (
-                          <span className="text-gray-400 italic">Unrated</span>
+                          <span className="text-muted-foreground text-sm">—</span>
                         )}
                       </td>
                       <td className="text-center py-3 px-4">
                         {player.ratings.blitz && player.ratings.blitz > 0 ? (
-                          <span className="font-semibold">{player.ratings.blitz}</span>
+                          <span className="font-semibold font-mono-display">{player.ratings.blitz}</span>
                         ) : (
-                          <span className="text-gray-400 italic">Unrated</span>
+                          <span className="text-muted-foreground text-sm">—</span>
                         )}
                       </td>
-                      <td className="text-center py-3 px-4 text-gray-600 text-sm">
-                        {player.date_last_game || <span className="text-gray-400 italic">Never</span>}
+                      <td className="text-center py-3 px-4 text-muted-foreground text-sm font-mono-display">
+                        {player.date_last_game || <span className="text-muted-foreground/50">—</span>}
                       </td>
                     </tr>
                   ))}

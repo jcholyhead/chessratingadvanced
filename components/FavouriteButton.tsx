@@ -43,23 +43,23 @@ export function FavouriteButton({ playerCode, playerName }: FavouriteButtonProps
         <TooltipTrigger asChild>
           <button
             onClick={toggleFavourite}
-            className="ml-2 p-1 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="ml-1 p-1.5 rounded-lg hover:bg-secondary transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring interactive"
             aria-label={isFavourite ? "Remove from favourites" : "Add to favourites"}
           >
             <Star
-              className={`h-5 w-5 transition-colors ${
+              className={`h-5 w-5 transition-all duration-200 ${
                 isFavourite 
-                  ? 'fill-yellow-400 text-yellow-400' 
-                  : 'text-gray-400 hover:text-yellow-400'
+                  ? 'fill-amber-400 text-amber-400 scale-110' 
+                  : 'text-muted-foreground/40 hover:text-amber-400'
               }`}
             />
           </button>
         </TooltipTrigger>
         <TooltipContent side="right" className="max-w-xs">
-          <p>
+          <p className="text-sm">
             {isFavourite 
               ? `${playerName || 'This player'} is your favourite. Click to remove.`
-              : "Favourite this profile so it opens automatically whenever you visit chessratinganalytics.com"
+              : "Set as your default player profile"
             }
           </p>
         </TooltipContent>

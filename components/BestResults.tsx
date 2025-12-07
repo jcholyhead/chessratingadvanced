@@ -2,6 +2,7 @@ import React from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import Link from "next/link"
+import { Trophy } from "lucide-react"
 
 interface Game {
   opponent_name: string
@@ -27,31 +28,57 @@ export function BestResults({ games, gameType }: BestResultsProps) {
     .sort((a, b) => calculateComparisonScore(b) - calculateComparisonScore(a))
     .slice(0, 3)
 
+  const getMedalColor = (index: number) => {
+    switch (index) {
+      case 0: return 'text-amber-500'
+      case 1: return 'text-slate-400'
+      case 2: return 'text-amber-700'
+      default: return 'text-muted-foreground'
+    }
+  }
+
   return (
-    <Card className="w-full h-full">
-      <CardHeader>
-        <CardTitle>Best {gameType} Results</CardTitle>
-        <CardDescription>Top 3 results based on opponent rating and game outcome</CardDescription>
+    <Card className="w-full h-full card-hover border-0 shadow-sm">
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-2">
+          <Trophy className="h-5 w-5 text-amber-500" />
+          <CardTitle className="text-lg">Best {gameType} Results</CardTitle>
+        </div>
+        <CardDescription>Top performances by opponent strength</CardDescription>
       </CardHeader>
-      <CardContent className="h-[calc(100%-4rem)] overflow-y-auto">
+      <CardContent>
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Opponent</TableHead>
-              <TableHead>Opponent Rating</TableHead>
-              <TableHead>Result</TableHead>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground font-semibold w-8"></TableHead>
+              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Opponent</TableHead>
+              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground font-semibold text-right">Rating</TableHead>
+              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground font-semibold text-center">Result</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {bestResults.map((game, index) => (
-              <TableRow key={index}>
-                <TableCell>
-                  <Link href={`/player/${game.opponent_no}`} className="text-blue-600 hover:underline">
+              <TableRow key={index} className="table-row-hover">
+                <TableCell className="py-3">
+                  <Trophy className={`h-4 w-4 ${getMedalColor(index)}`} />
+                </TableCell>
+                <TableCell className="py-3">
+                  <Link href={`/player/${game.opponent_no}`} className="link-primary font-medium">
                     {game.opponent_name}
                   </Link>
                 </TableCell>
-                <TableCell>{game.opponent_rating}</TableCell>
-                <TableCell>{game.score === 1 ? "Win" : "Draw"}</TableCell>
+                <TableCell className="py-3 text-right font-mono-display font-medium">
+                  {game.opponent_rating || '—'}
+                </TableCell>
+                <TableCell className="py-3 text-center">
+                  <span className={`inline-flex items-center justify-center h-7 w-14 rounded-md text-sm font-semibold ${
+                    game.score === 1 
+                      ? 'bg-green-100 text-green-700' 
+                      : 'bg-amber-100 text-amber-700'
+                  }`}>
+                    {game.score === 1 ? "Win" : "Draw"}
+                  </span>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -60,4 +87,3 @@ export function BestResults({ games, gameType }: BestResultsProps) {
     </Card>
   )
 }
-

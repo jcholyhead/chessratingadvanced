@@ -56,32 +56,50 @@ export function OfficialRating({ playerCode, gameType, setOfficialRating }: Offi
   }, [playerCode, gameType, setOfficialRating])
 
   if (isLoading) {
-    return <div>Loading official rating...</div>
+    return (
+      <div className="flex items-center gap-3">
+        <span className="text-sm font-medium text-muted-foreground w-40">Official Rating</span>
+        <div className="h-8 w-20 bg-secondary rounded-lg animate-pulse" />
+      </div>
+    )
   }
 
   if (error) {
-    return <div className="text-red-500">{error}</div>
+    return (
+      <div className="flex items-center gap-3">
+        <span className="text-sm font-medium text-muted-foreground w-40">Official Rating</span>
+        <span className="text-sm text-destructive">Unable to load</span>
+      </div>
+    )
   }
 
   if (rating === null) {
-    return <div className="text-red-500">Official rating not available</div>
+    return (
+      <div className="flex items-center gap-3">
+        <span className="text-sm font-medium text-muted-foreground w-40">Official Rating</span>
+        <span className="text-sm text-muted-foreground italic">Not rated</span>
+      </div>
+    )
   }
 
   return (
-    <div className="flex items-baseline">
-      <span className="text-base font-medium text-gray-700 w-52">Official {gameType} Rating:</span>
-      <div className="flex items-center">
-        <span className={`text-xl ${isProvisional ? "text-gray-600" : "text-blue-600 font-semibold"}`}>
+    <div className="flex items-center gap-3">
+      <span className="text-sm font-medium text-muted-foreground w-40">Official {gameType}</span>
+      <div className="flex items-center gap-2">
+        <span className={`text-2xl font-bold font-mono-display ${isProvisional ? "text-muted-foreground" : "text-primary"}`}>
           {rating}
         </span>
         {isProvisional && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <HelpCircle className="ml-2 h-4 w-4 text-gray-500" />
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary text-xs font-medium text-muted-foreground">
+                  Provisional
+                  <HelpCircle className="h-3 w-3" />
+                </span>
               </TooltipTrigger>
               <TooltipContent>
-                <p>This is a provisional rating</p>
+                <p>This rating is based on fewer than 30 games</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -90,4 +108,3 @@ export function OfficialRating({ playerCode, gameType, setOfficialRating }: Offi
     </div>
   )
 }
-
