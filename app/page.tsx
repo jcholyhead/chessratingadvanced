@@ -1,11 +1,12 @@
 import { Suspense } from "react"
 import PlayerSearchWrapper from "@/components/PlayerSearchWrapper"
 import ChessResultsTable from "@/components/ChessResultsTable"
+import TechnicalDifficultiesModal from "@/components/TechnicalDifficultiesModal"
 
 export default function Home() {
   return (
     <div className="container mx-auto">
-      
+      <TechnicalDifficultiesModal />
       <h2 className="text-xl font-semibold mb-4">Enhanced Analytics for English Chess Federation Ratings</h2>
       <div className="mb-4">
         <Suspense fallback={<div>Loading player search...</div>}>
